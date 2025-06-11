@@ -202,15 +202,35 @@ class OptimizedRAGSystem:
             print(f"❌ Error processing PDF: {str(e)}")
             raise
 
-    def ask_question(self, question: str) -> dict:
-        """Ask question and get optimized answer."""
+    def ask_question(self, question: str, chat_history: list = None) -> dict:
+        """Ask question with optional chat history for context."""
         if not self.qa_chain:
             raise ValueError("QA chain not initialized. Process a PDF first.")
 
         print(f"\n❓ Question: {question}")
         print("🤔 Thinking...")
 
-        result = self.qa_chain.invoke({"query": question})
+        # Build context-aware query
+        if chat_history and len(chat_history) > 0:
+            # Include recent conversation context
+            context_messages = []
+            for msg in chat_history[-6:]:  # Last 6 messages for context
+                role = "Human" if msg["role"] == "user" else "Assistant"
+                context_messages.append(f"{role}: {msg['content']}")
+
+            conversation_context = "\n".join(context_messages)
+            enhanced_query = f"""Previous conversation:
+{conversation_context}
+
+Current question: {question}
+
+Please answer the current question considering the conversation context above."""
+
+            print("🧠 Using conversation context...")
+        else:
+            enhanced_query = question
+
+        result = self.qa_chain.invoke({"query": enhanced_query})
 
         print(f"\n💡 Answer: {result['result']}")
         print(f"\n📚 Sources used: {len(result['source_documents'])} chunks")

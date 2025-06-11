@@ -27,7 +27,7 @@ from config import (
 
 
 class OptimizedRAGSystem:
-    """RAG System optimisé avec chunking sémantique et derniers modèles OpenAI 2024"""
+    """RAG System optimized with semantic chunking and latest OpenAI models"""
 
     def __init__(self):
         """Initialize optimized RAG system with latest models and techniques."""
@@ -63,9 +63,14 @@ class OptimizedRAGSystem:
                 separators=["\n\n", "\n", " ", ""]
             )
 
-        # Initialize vector store
-        self.vector_store = None
+        # Initialize vector store - Load existing if available
+        self.vector_store = self._load_existing_vector_store()
         self.qa_chain = None
+
+        # Initialize QA chain if vector store exists
+        if self.vector_store and self._has_documents():
+            self.create_qa_chain()
+            print(f"✅ Loaded existing knowledge base with {self.get_knowledge_base_stats()['total_documents']} documents")
 
     def load_pdf(self, pdf_path: str) -> List[Document]:
         """Load PDF using PyPDFLoader for better text extraction."""
@@ -94,14 +99,38 @@ class OptimizedRAGSystem:
         print(f"✅ Created {len(chunks)} optimized chunks")
         return chunks
 
+    def _load_existing_vector_store(self):
+        """Load existing vector store if available."""
+        try:
+            if os.path.exists(CHROMA_PERSIST_DIRECTORY):
+                vector_store = Chroma(
+                    embedding_function=self.embeddings,
+                    persist_directory=CHROMA_PERSIST_DIRECTORY
+                )
+                return vector_store
+        except Exception as e:
+            print(f"⚠️ Could not load existing vector store: {str(e)}")
+        return None
+
+    def _has_documents(self) -> bool:
+        """Check if vector store has documents."""
+        try:
+            if self.vector_store:
+                collection = self.vector_store._collection
+                return collection.count() > 0
+        except:
+            return False
+        return False
+
     def create_vector_store(self, chunks: List[Document]) -> None:
         """Create and populate vector store."""
         print("🗄️ Creating optimized vector store...")
 
-        self.vector_store = Chroma(
-            embedding_function=self.embeddings,
-            persist_directory=CHROMA_PERSIST_DIRECTORY
-        )
+        if not self.vector_store:
+            self.vector_store = Chroma(
+                embedding_function=self.embeddings,
+                persist_directory=CHROMA_PERSIST_DIRECTORY
+            )
 
         # Add documents in batches for better performance
         batch_size = 50

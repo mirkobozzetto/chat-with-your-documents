@@ -60,10 +60,17 @@ def main():
         # Collection stats
         st.subheader("📊 Knowledge Base Stats")
         try:
-            stats = st.session_state.rag_system.get_collection_stats()
-            st.metric("Total Documents", stats["total_documents"])
-        except:
+            stats = st.session_state.rag_system.get_knowledge_base_stats()
+            if "status" in stats:
+                st.metric("Total Documents", "0")
+            else:
+                st.metric("Total Documents", stats["total_documents"])
+                st.text(f"Model: {stats['chat_model']}")
+                st.text(f"Embeddings: {stats['embedding_model']}")
+                st.text(f"Strategy: {stats['chunk_strategy']}")
+        except Exception as e:
             st.metric("Total Documents", "0")
+            st.text(f"Error: {str(e)}")
 
     # Main chat interface
     st.header("💬 Ask Questions")
@@ -95,15 +102,15 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    result = st.session_state.rag_system.query(prompt)
+                    result = st.session_state.rag_system.ask_question(prompt)
 
                     # Display answer
-                    st.markdown(result["answer"])
+                    st.markdown(result["result"])
 
                     # Add assistant message to chat history
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": result["answer"],
+                        "content": result["result"],
                         "sources": result["source_documents"]
                     })
 

@@ -18,6 +18,10 @@ from config import (
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     CHUNK_STRATEGY,
+    CHAT_TEMPERATURE,
+    RETRIEVAL_K,
+    RETRIEVAL_FETCH_K,
+    RETRIEVAL_LAMBDA_MULT,
     CHROMA_PERSIST_DIRECTORY
 )
 
@@ -35,10 +39,10 @@ class OptimizedRAGSystem:
             api_key=OPENAI_API_KEY
         )
 
-        # Initialize OpenAI LLM - GPT-4o for best performance
+        # Initialize OpenAI LLM - Configurable model and temperature
         self.llm = ChatOpenAI(
-            model=CHAT_MODEL,  # gpt-4o
-            temperature=0.1,  # Slightly creative but consistent
+            model=CHAT_MODEL,  # Configurable via .env
+            temperature=CHAT_TEMPERATURE,  # Configurable via .env
             api_key=OPENAI_API_KEY
         )
 
@@ -119,9 +123,9 @@ class OptimizedRAGSystem:
         retriever = self.vector_store.as_retriever(
             search_type="mmr",  # Maximum Marginal Relevance for diversity
             search_kwargs={
-                "k": 4,  # Retrieve more chunks for better context
-                "fetch_k": 20,  # Consider more candidates
-                "lambda_mult": 0.7  # Balance between relevance and diversity
+                "k": RETRIEVAL_K,  # Configurable via .env
+                "fetch_k": RETRIEVAL_FETCH_K,  # Configurable via .env
+                "lambda_mult": RETRIEVAL_LAMBDA_MULT  # Configurable via .env
             }
         )
 
@@ -198,5 +202,9 @@ class OptimizedRAGSystem:
             "chat_model": CHAT_MODEL,
             "chunk_strategy": CHUNK_STRATEGY,
             "chunk_size": CHUNK_SIZE,
-            "chunk_overlap": CHUNK_OVERLAP
+            "chunk_overlap": CHUNK_OVERLAP,
+            "chat_temperature": CHAT_TEMPERATURE,
+            "retrieval_k": RETRIEVAL_K,
+            "retrieval_fetch_k": RETRIEVAL_FETCH_K,
+            "retrieval_lambda_mult": RETRIEVAL_LAMBDA_MULT
         }

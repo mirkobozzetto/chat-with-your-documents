@@ -6,7 +6,7 @@ Usage: python cli.py <pdf_path>
 
 import sys
 import os
-from rag_system_optimized import OptimizedRAGSystem
+from rag_system import OptimizedRAGSystem
 
 
 def main():

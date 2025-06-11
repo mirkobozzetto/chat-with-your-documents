@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from rag_system_optimized import OptimizedRAGSystem as RAGSystem
+from rag_system import OptimizedRAGSystem as RAGSystem
 
 # Page config
 st.set_page_config(
@@ -102,7 +102,7 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    result = st.session_state.rag_system.ask_question(prompt)
+                    result = st.session_state.rag_system.ask_question(prompt, st.session_state.messages)
 
                     # Display answer
                     st.markdown(result["result"])

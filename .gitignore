@@ -1,0 +1,112 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.key
+
+# Vector databases and embeddings
+chroma_db/
+chroma_db_*/
+*.db
+*.sqlite
+embeddings/
+vector_store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+temp_*/
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Model cache and downloads
+models/
+.cache/
+transformers_cache/
+sentence_transformers_cache/
+
+# PDF uploads (temporary)
+temp_*.pdf
+uploaded_*.pdf
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Testing
+.pytest_cache/
+.tox/
+
+# Documentation builds
+docs/_build/
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+*.7z

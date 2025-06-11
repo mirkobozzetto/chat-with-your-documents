@@ -27,7 +27,12 @@ streamlit run app.py
 ### Command Line
 
 ```bash
+`windows`
+
 python cli.py path/to/your/document.pdf
+
+`linux or macos`
+
 python3 cli.py path/to/your/document.pdf
 ```
 
@@ -36,11 +41,11 @@ python3 cli.py path/to/your/document.pdf
 ```
 rag-ai/
 ├── app.py                    # Streamlit interface
-├── rag_system_optimized.py   # Optimized RAG system
+├── rag_system.py             # RAG system
 ├── config.py                 # Configuration
-├── cli.py              # Command line demo
-├── requirements.txt         # Dependencies
-└── chroma_db/              # Vector database (auto-created)
+├── cli.py                    # Command line demo
+├── requirements.txt          # Dependencies
+└── chroma_db/                # Vector database (auto-created)
 ```
 
 ## Technical Stack

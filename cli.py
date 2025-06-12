@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-Command-line interface for the RAG system.
 Usage: python cli.py <document_path>
 """
 

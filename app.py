@@ -1,3 +1,5 @@
+# app.py
+
 import streamlit as st
 import os
 from rag_system import OptimizedRAGSystem as RAGSystem
@@ -49,6 +51,38 @@ def main():
                         if os.path.exists(temp_path):
                             os.remove(temp_path)
 
+        st.subheader("📖 Document Selection")
+        try:
+            available_docs = st.session_state.rag_system.get_available_documents()
+            if available_docs:
+                current_selection = st.session_state.rag_system.selected_document
+
+                selected_doc = st.selectbox(
+                    "Choose document to query:",
+                    options=["All documents"] + available_docs,
+                    index=0 if current_selection is None else available_docs.index(current_selection) + 1,
+                    help="Select which document to search in"
+                )
+
+                if selected_doc == "All documents":
+                    if current_selection is not None:
+                        st.session_state.rag_system.selected_document = None
+                        st.session_state.rag_system.create_qa_chain()
+                        st.rerun()
+                else:
+                    if current_selection != selected_doc:
+                        st.session_state.rag_system.set_selected_document(selected_doc)
+                        st.rerun()
+
+                if st.session_state.rag_system.selected_document:
+                    st.info(f"🎯 Currently querying: {st.session_state.rag_system.selected_document}")
+                else:
+                    st.info("🌐 Querying all documents")
+            else:
+                st.info("No documents available. Upload a document first.")
+        except Exception as e:
+            st.error(f"Error loading documents: {str(e)}")
+
         st.subheader("📊 Knowledge Base Stats")
         try:
             stats = st.session_state.rag_system.get_knowledge_base_stats()
@@ -56,9 +90,18 @@ def main():
                 st.metric("Total Documents", "0")
             else:
                 st.metric("Total Documents", stats["total_documents"])
+                st.metric("Total Chunks", stats["total_chunks"])
                 st.text(f"Model: {stats['chat_model']}")
                 st.text(f"Embeddings: {stats['embedding_model']}")
                 st.text(f"Strategy: {stats['chunk_strategy']}")
+
+                if stats["available_documents"]:
+                    with st.expander("📋 Available Documents"):
+                        for doc in stats["available_documents"]:
+                            if doc == stats["selected_document"]:
+                                st.text(f"🎯 {doc} (selected)")
+                            else:
+                                st.text(f"📄 {doc}")
         except Exception as e:
             st.metric("Total Documents", "0")
             st.text(f"Error: {str(e)}")
@@ -74,7 +117,8 @@ def main():
             if message["role"] == "assistant" and "sources" in message:
                 with st.expander("📄 Source Documents"):
                     for i, doc in enumerate(message["sources"]):
-                        st.markdown(f"**Source {i+1}:**")
+                        source_file = doc.metadata.get("source_filename", "Unknown")
+                        st.markdown(f"**Source {i+1}** (from {source_file}):")
                         st.text(doc.page_content[:300] + "..." if len(doc.page_content) > 300 else doc.page_content)
 
     if prompt := st.chat_input("Ask a question about your documents..."):
@@ -98,7 +142,8 @@ def main():
 
                     with st.expander("📄 Source Documents"):
                         for i, doc in enumerate(result["source_documents"]):
-                            st.markdown(f"**Source {i+1}:**")
+                            source_file = doc.metadata.get("source_filename", "Unknown")
+                            st.markdown(f"**Source {i+1}** (from {source_file}):")
                             st.text(doc.page_content[:300] + "..." if len(doc.page_content) > 300 else doc.page_content)
 
                 except Exception as e:

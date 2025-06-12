@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Command-line interface for the RAG system.
-Usage: python cli.py <pdf_path>
+Usage: python cli.py <document_path>
 """
 
 import sys
@@ -11,23 +11,24 @@ from rag_system import OptimizedRAGSystem
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python cli.py <pdf_path>")
-        print("       python3 cli.py <pdf_path>")
+        print("Usage: python cli.py <document_path>")
+        print("       python3 cli.py <document_path>")
+        print("Supported formats: PDF, DOCX, TXT, MD")
         sys.exit(1)
 
-    pdf_path = sys.argv[1]
+    document_path = sys.argv[1]
 
-    if not os.path.exists(pdf_path):
-        print(f"Error: PDF file not found: {pdf_path}")
+    if not os.path.exists(document_path):
+        print(f"Error: Document file not found: {document_path}")
         sys.exit(1)
 
     print("Initializing RAG system...")
     rag = OptimizedRAGSystem()
 
-    print(f"Processing PDF: {pdf_path}")
-    rag.process_pdf(pdf_path)
+    print(f"Processing document: {document_path}")
+    rag.process_pdf(document_path)
 
-    print("\nPDF processed successfully!")
+    print("\nDocument processed successfully!")
     print("You can now ask questions. Type 'quit' to exit.\n")
 
     while True:

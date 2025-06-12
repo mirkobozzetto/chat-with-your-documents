@@ -6,7 +6,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, UnstructuredWordDocumentLoader
 from langchain.chains import RetrievalQA
 from langchain.schema import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -33,20 +33,17 @@ class OptimizedRAGSystem:
         """Initialize optimized RAG system with latest models and techniques."""
         print("🚀 Initializing Optimized RAG System...")
 
-        # Initialize OpenAI embeddings - LARGE model for better performance
         self.embeddings = OpenAIEmbeddings(
-            model=EMBEDDING_MODEL,  # text-embedding-3-large
+            model=EMBEDDING_MODEL,
             api_key=OPENAI_API_KEY
         )
 
-        # Initialize OpenAI LLM - Configurable model and temperature
         self.llm = ChatOpenAI(
-            model=CHAT_MODEL,  # Configurable via .env
-            temperature=CHAT_TEMPERATURE,  # Configurable via .env
+            model=CHAT_MODEL,
+            temperature=CHAT_TEMPERATURE,
             api_key=OPENAI_API_KEY
         )
 
-        # Initialize semantic splitter for intelligent chunking
         if CHUNK_STRATEGY == "semantic":
             print("📚 Using Semantic Chunking Strategy")
             self.text_splitter = SemanticChunker(
@@ -63,26 +60,33 @@ class OptimizedRAGSystem:
                 separators=["\n\n", "\n", " ", ""]
             )
 
-        # Initialize vector store - Load existing if available
         self.vector_store = self._load_existing_vector_store()
         self.qa_chain = None
 
-        # Initialize QA chain if vector store exists
         if self.vector_store and self._has_documents():
             self.create_qa_chain()
             print(f"✅ Loaded existing knowledge base with {self.get_knowledge_base_stats()['total_documents']} documents")
 
     def load_pdf(self, pdf_path: str) -> List[Document]:
-        """Load PDF using PyPDFLoader for better text extraction."""
-        print(f"📄 Loading PDF: {pdf_path}")
+        """Load document - supports PDF, DOCX, TXT, MD"""
+        print(f"📄 Loading document: {pdf_path}")
 
         if not os.path.exists(pdf_path):
-            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+            raise FileNotFoundError(f"Document file not found: {pdf_path}")
 
-        loader = PyPDFLoader(pdf_path)
+        file_ext = Path(pdf_path).suffix.lower()
+
+        if file_ext == '.pdf':
+            loader = PyPDFLoader(pdf_path)
+        elif file_ext == '.docx':
+            loader = UnstructuredWordDocumentLoader(pdf_path)
+        elif file_ext in ['.txt', '.md']:
+            loader = TextLoader(pdf_path, encoding='utf-8')
+        else:
+            raise ValueError(f"Unsupported format: {file_ext}")
+
         documents = loader.load()
-
-        print(f"✅ Loaded {len(documents)} pages from PDF")
+        print(f"✅ Loaded {len(documents)} sections from document")
         return documents
 
     def chunk_documents(self, documents: List[Document]) -> List[Document]:
@@ -90,7 +94,6 @@ class OptimizedRAGSystem:
         print(f"🔄 Chunking documents with {CHUNK_STRATEGY} strategy...")
 
         if CHUNK_STRATEGY == "semantic":
-            # Combine all documents into one text for semantic chunking
             combined_text = "\n\n".join([doc.page_content for doc in documents])
             chunks = self.text_splitter.create_documents([combined_text])
         else:
@@ -132,7 +135,6 @@ class OptimizedRAGSystem:
                 persist_directory=CHROMA_PERSIST_DIRECTORY
             )
 
-        # Add documents in batches for better performance
         batch_size = 50
         total_batches = (len(chunks) + batch_size - 1) // batch_size
 
@@ -150,11 +152,11 @@ class OptimizedRAGSystem:
         print("🔗 Creating optimized QA chain...")
 
         retriever = self.vector_store.as_retriever(
-            search_type="mmr",  # Maximum Marginal Relevance for diversity
+            search_type="mmr",
             search_kwargs={
-                "k": RETRIEVAL_K,  # Configurable via .env
-                "fetch_k": RETRIEVAL_FETCH_K,  # Configurable via .env
-                "lambda_mult": RETRIEVAL_LAMBDA_MULT  # Configurable via .env
+                "k": RETRIEVAL_K,
+                "fetch_k": RETRIEVAL_FETCH_K,
+                "lambda_mult": RETRIEVAL_LAMBDA_MULT
             }
         )
 
@@ -169,9 +171,9 @@ class OptimizedRAGSystem:
         print("✅ QA chain ready")
 
     def process_pdf(self, pdf_path: str) -> None:
-        """Complete pipeline to process PDF."""
+        """Complete pipeline to process document."""
         try:
-            print(f"\n🎯 Processing PDF with Optimized RAG System")
+            print(f"\n🎯 Processing document with Optimized RAG System")
             print(f"📊 Configuration:")
             print(f"   • Embedding Model: {EMBEDDING_MODEL}")
             print(f"   • Chat Model: {CHAT_MODEL}")
@@ -179,42 +181,33 @@ class OptimizedRAGSystem:
             print(f"   • Chunk Size: {CHUNK_SIZE}")
             print(f"   • Chunk Overlap: {CHUNK_OVERLAP}")
 
-            # Load PDF
             documents = self.load_pdf(pdf_path)
-
-            # Chunk documents
             chunks = self.chunk_documents(documents)
-
-            # Create vector store
             self.create_vector_store(chunks)
-
-            # Create QA chain
             self.create_qa_chain()
 
-            print(f"\n🎉 PDF processing complete!")
+            print(f"\n🎉 Document processing complete!")
             print(f"📈 Performance optimizations applied:")
-            print(f"   • Latest OpenAI models (2024)")
+            print(f"   • Latest OpenAI models")
             print(f"   • {CHUNK_STRATEGY.title()} chunking strategy")
             print(f"   • MMR retrieval for diverse results")
             print(f"   • Batch processing for efficiency")
 
         except Exception as e:
-            print(f"❌ Error processing PDF: {str(e)}")
+            print(f"❌ Error processing document: {str(e)}")
             raise
 
     def ask_question(self, question: str, chat_history: list = None) -> dict:
         """Ask question with optional chat history for context."""
         if not self.qa_chain:
-            raise ValueError("QA chain not initialized. Process a PDF first.")
+            raise ValueError("QA chain not initialized. Process a document first.")
 
         print(f"\n❓ Question: {question}")
         print("🤔 Thinking...")
 
-        # Build context-aware query
         if chat_history and len(chat_history) > 0:
-            # Include recent conversation context
             context_messages = []
-            for msg in chat_history[-6:]:  # Last 6 messages for context
+            for msg in chat_history[-6:]:
                 role = "Human" if msg["role"] == "user" else "Assistant"
                 context_messages.append(f"{role}: {msg['content']}")
 

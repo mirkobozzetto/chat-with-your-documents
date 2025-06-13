@@ -110,3 +110,5 @@ docs/_build/
 *.tar.gz
 *.rar
 *.7z
+
+agent_configs.json

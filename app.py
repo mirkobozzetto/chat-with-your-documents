@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
-from ui.session_manager import SessionManager
-from ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface
+from src.ui.session_manager import SessionManager
+from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface
 
 
 def setup_page_config():

@@ -1,8 +1,10 @@
 # src/qa_manager.py
 from typing import Optional, List, Dict, Any
 from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
 from src.vector_store_manager import VectorStoreManager
 from src.document_selector import DocumentSelector
+from src.agents import AgentManager
 
 
 class QAManager:
@@ -17,6 +19,7 @@ class QAManager:
         self.retrieval_fetch_k = retrieval_fetch_k
         self.retrieval_lambda_mult = retrieval_lambda_mult
         self.qa_chain = None
+        self.agent_manager = AgentManager()
 
     def create_qa_chain(self) -> None:
         print("🔗 Creating optimized QA chain...")
@@ -56,12 +59,18 @@ class QAManager:
             raise ValueError("QA chain not initialized. Process a document first.")
 
         print(f"\n❓ Question: {question}")
+
+        selected_document = self.document_selector.get_selected_document()
         if self.document_selector.has_selected_document():
-            print(f"📖 Querying document: {self.document_selector.get_selected_document()}")
+            print(f"📖 Querying document: {selected_document}")
+
+            agent_config = self.agent_manager.get_agent_for_document(selected_document)
+            if agent_config and agent_config.is_active:
+                print(f"🤖 Using {agent_config.agent_type.value} agent")
+
         print("🤔 Thinking...")
 
-        enhanced_query = self._build_enhanced_query(question, chat_history)
-
+        enhanced_query = self._build_enhanced_query_with_agent(question, chat_history, selected_document)
         result = self.qa_chain.invoke({"query": enhanced_query})
 
         print(f"\n💡 Answer: {result['result']}")
@@ -69,7 +78,21 @@ class QAManager:
 
         return result
 
-    def _build_enhanced_query(self, question: str, chat_history: Optional[List[Dict]]) -> str:
+    def _build_enhanced_query_with_agent(self, question: str, chat_history: Optional[List[Dict]],
+                                       selected_document: Optional[str]) -> str:
+        context_query = self._build_context_from_history(question, chat_history)
+
+        agent_config = self.agent_manager.get_agent_for_document(selected_document)
+        if agent_config and agent_config.is_active:
+            return self.agent_manager.build_enhanced_prompt(
+                question=context_query,
+                context="{context}",
+                document_name=selected_document
+            )
+
+        return context_query
+
+    def _build_context_from_history(self, question: str, chat_history: Optional[List[Dict]]) -> str:
         if chat_history and len(chat_history) > 0:
             context_messages = []
             for msg in chat_history[-6:]:
@@ -95,3 +118,9 @@ Please answer the current question considering the conversation context above.""
     def update_document_selection(self) -> None:
         if self.is_ready():
             self.create_qa_chain()
+
+    def get_agent_manager(self) -> AgentManager:
+        return self.agent_manager
+
+    def sync_agents_with_documents(self, available_documents: List[str]) -> None:
+        self.agent_manager.sync_with_available_documents(available_documents)

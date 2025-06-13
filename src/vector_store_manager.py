@@ -6,16 +6,13 @@ from langchain.schema import Document
 
 
 class VectorStoreManager:
-    """Manages ChromaDB vector store operations"""
 
     def __init__(self, embeddings, persist_directory: str):
-        """Initialize vector store manager"""
         self.embeddings = embeddings
         self.persist_directory = persist_directory
         self.vector_store = self._load_existing_vector_store()
 
     def _load_existing_vector_store(self) -> Optional[Chroma]:
-        """Load existing vector store if available"""
         try:
             if os.path.exists(self.persist_directory):
                 vector_store = Chroma(
@@ -28,7 +25,6 @@ class VectorStoreManager:
         return None
 
     def has_documents(self) -> bool:
-        """Check if vector store has documents"""
         try:
             if self.vector_store:
                 collection = self.vector_store._collection
@@ -38,7 +34,6 @@ class VectorStoreManager:
         return False
 
     def create_vector_store(self, chunks: List[Document]) -> None:
-        """Create and populate vector store"""
         print("🗄️ Creating optimized vector store...")
 
         if not self.vector_store:
@@ -60,11 +55,9 @@ class VectorStoreManager:
         print(f"✅ Vector store created with {len(chunks)} chunks")
 
     def get_vector_store(self) -> Optional[Chroma]:
-        """Get the vector store instance"""
         return self.vector_store
 
     def get_chunk_count(self) -> int:
-        """Get total number of chunks in vector store"""
         if not self.vector_store:
             return 0
 
@@ -75,7 +68,6 @@ class VectorStoreManager:
             return 0
 
     def get_all_metadata(self) -> List[dict]:
-        """Get all document metadata from vector store"""
         if not self.vector_store:
             return []
 

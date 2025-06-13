@@ -6,12 +6,10 @@ from src.document_selector import DocumentSelector
 
 
 class QAManager:
-    """Manages question answering and retrieval operations"""
 
     def __init__(self, llm, vector_store_manager: VectorStoreManager,
                  document_selector: DocumentSelector, retrieval_k: int,
                  retrieval_fetch_k: int, retrieval_lambda_mult: float):
-        """Initialize QA manager"""
         self.llm = llm
         self.vector_store_manager = vector_store_manager
         self.document_selector = document_selector
@@ -21,21 +19,18 @@ class QAManager:
         self.qa_chain = None
 
     def create_qa_chain(self) -> None:
-        """Create optimized QA chain with better retrieval"""
         print("🔗 Creating optimized QA chain...")
 
         vector_store = self.vector_store_manager.get_vector_store()
         if not vector_store:
             raise ValueError("Vector store not available")
 
-        # Create retriever with optional document filter
         search_kwargs = {
             "k": self.retrieval_k,
             "fetch_k": self.retrieval_fetch_k,
             "lambda_mult": self.retrieval_lambda_mult
         }
 
-        # Add document filter if specific document is selected
         document_filter = self.document_selector.get_document_filter()
         if document_filter:
             search_kwargs["filter"] = document_filter
@@ -57,7 +52,6 @@ class QAManager:
         print("✅ QA chain ready")
 
     def ask_question(self, question: str, chat_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
-        """Ask question with optional chat history for context"""
         if not self.qa_chain:
             raise ValueError("QA chain not initialized. Process a document first.")
 
@@ -66,10 +60,8 @@ class QAManager:
             print(f"📖 Querying document: {self.document_selector.get_selected_document()}")
         print("🤔 Thinking...")
 
-        # Build context-aware query
         enhanced_query = self._build_enhanced_query(question, chat_history)
 
-        # Execute query
         result = self.qa_chain.invoke({"query": enhanced_query})
 
         print(f"\n💡 Answer: {result['result']}")
@@ -78,10 +70,9 @@ class QAManager:
         return result
 
     def _build_enhanced_query(self, question: str, chat_history: Optional[List[Dict]]) -> str:
-        """Build enhanced query with conversation context"""
         if chat_history and len(chat_history) > 0:
             context_messages = []
-            for msg in chat_history[-6:]:  # Last 6 messages for context
+            for msg in chat_history[-6:]:
                 role = "Human" if msg["role"] == "user" else "Assistant"
                 context_messages.append(f"{role}: {msg['content']}")
 
@@ -99,10 +90,8 @@ Please answer the current question considering the conversation context above.""
             return question
 
     def is_ready(self) -> bool:
-        """Check if QA chain is ready for questions"""
         return self.qa_chain is not None
 
     def update_document_selection(self) -> None:
-        """Update QA chain when document selection changes"""
         if self.is_ready():
             self.create_qa_chain()

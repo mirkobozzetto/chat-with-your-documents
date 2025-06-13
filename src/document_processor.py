@@ -10,10 +10,8 @@ from langchain.schema import Document
 
 
 class DocumentProcessor:
-    """Handles document loading and chunking operations"""
 
     def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int):
-        """Initialize document processor with chunking configuration"""
         self.embeddings = embeddings
         self.chunk_strategy = chunk_strategy
         self.chunk_size = chunk_size
@@ -36,7 +34,6 @@ class DocumentProcessor:
             )
 
     def load_document(self, file_path: str) -> List[Document]:
-        """Load document - supports PDF, DOCX, TXT, MD"""
         print(f"📄 Loading document: {file_path}")
 
         if not os.path.exists(file_path):
@@ -56,7 +53,6 @@ class DocumentProcessor:
 
         documents = loader.load()
 
-        # Add filename metadata to each document
         for doc in documents:
             doc.metadata["source_filename"] = filename
             doc.metadata["document_type"] = file_ext[1:]
@@ -65,13 +61,11 @@ class DocumentProcessor:
         return documents
 
     def chunk_documents(self, documents: List[Document]) -> List[Document]:
-        """Split documents into optimized chunks"""
         print(f"🔄 Chunking documents with {self.chunk_strategy} strategy...")
 
         if self.chunk_strategy == "semantic":
             combined_text = "\n\n".join([doc.page_content for doc in documents])
             chunks = self.text_splitter.create_documents([combined_text])
-            # Preserve metadata from original documents
             filename = documents[0].metadata.get("source_filename", "unknown")
             doc_type = documents[0].metadata.get("document_type", "unknown")
             for chunk in chunks:
@@ -84,7 +78,6 @@ class DocumentProcessor:
         return chunks
 
     def process_document_pipeline(self, file_path: str) -> List[Document]:
-        """Complete document processing pipeline"""
         documents = self.load_document(file_path)
         chunks = self.chunk_documents(documents)
         return chunks

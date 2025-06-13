@@ -24,23 +24,17 @@ from src.qa_manager import QAManager
 
 
 class OptimizedRAGSystem:
-    """RAG System orchestrator with separated responsibilities"""
 
     def __init__(self):
-        """Initialize optimized RAG system with modular components"""
         print("🚀 Initializing Optimized RAG System...")
 
-        # Initialize core AI services
         self._initialize_ai_services()
 
-        # Initialize modular components
         self._initialize_components()
 
-        # Setup initial state
         self._initialize_system()
 
     def _initialize_ai_services(self):
-        """Initialize OpenAI services"""
         self.embeddings = OpenAIEmbeddings(
             model=EMBEDDING_MODEL,
             api_key=OPENAI_API_KEY
@@ -53,7 +47,6 @@ class OptimizedRAGSystem:
         )
 
     def _initialize_components(self):
-        """Initialize modular components"""
         self.document_processor = DocumentProcessor(
             embeddings=self.embeddings,
             chunk_strategy=CHUNK_STRATEGY,
@@ -80,32 +73,24 @@ class OptimizedRAGSystem:
         )
 
     def _initialize_system(self):
-        """Initialize system state"""
         if self.vector_store_manager.has_documents():
             self.qa_manager.create_qa_chain()
             available_docs = self.document_selector.get_available_documents()
             print(f"✅ Loaded existing knowledge base with {len(available_docs)} documents")
 
-    # Public API methods - maintain compatibility with existing interface
-
     def load_pdf(self, pdf_path: str) -> List:
-        """Load document - supports PDF, DOCX, TXT, MD"""
         return self.document_processor.load_document(pdf_path)
 
     def chunk_documents(self, documents: List) -> List:
-        """Split documents into optimized chunks"""
         return self.document_processor.chunk_documents(documents)
 
     def create_vector_store(self, chunks: List) -> None:
-        """Create and populate vector store"""
         self.vector_store_manager.create_vector_store(chunks)
 
     def create_qa_chain(self) -> None:
-        """Create optimized QA chain with better retrieval"""
         self.qa_manager.create_qa_chain()
 
     def process_pdf(self, pdf_path: str) -> None:
-        """Complete pipeline to process document"""
         try:
             print(f"\n🎯 Processing document with Optimized RAG System")
             print(f"📊 Configuration:")
@@ -115,11 +100,9 @@ class OptimizedRAGSystem:
             print(f"   • Chunk Size: {CHUNK_SIZE}")
             print(f"   • Chunk Overlap: {CHUNK_OVERLAP}")
 
-            # Process document through pipeline
             chunks = self.document_processor.process_document_pipeline(pdf_path)
             self.vector_store_manager.create_vector_store(chunks)
 
-            # Auto-select the newly added document and create QA chain
             filename = Path(pdf_path).name
             self.document_selector.set_selected_document(filename)
             self.qa_manager.create_qa_chain()
@@ -136,11 +119,9 @@ class OptimizedRAGSystem:
             raise
 
     def ask_question(self, question: str, chat_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
-        """Ask question with optional chat history for context"""
         return self.qa_manager.ask_question(question, chat_history)
 
     def get_knowledge_base_stats(self) -> Dict[str, Any]:
-        """Get statistics about the knowledge base"""
         if not self.vector_store_manager.get_vector_store():
             return {"status": "No documents processed"}
 
@@ -163,30 +144,23 @@ class OptimizedRAGSystem:
             "retrieval_lambda_mult": RETRIEVAL_LAMBDA_MULT
         }
 
-    # New methods for document selection feature
-
     def get_available_documents(self) -> List[str]:
-        """Get list of available documents in vector store"""
         return self.document_selector.get_available_documents()
 
     def set_selected_document(self, filename: str) -> None:
-        """Set the document to query against"""
         self.document_selector.set_selected_document(filename)
         self.qa_manager.update_document_selection()
 
     def clear_selected_document(self) -> None:
-        """Clear document selection to query all documents"""
         self.document_selector.clear_selected_document()
         self.qa_manager.update_document_selection()
 
     @property
     def selected_document(self) -> Optional[str]:
-        """Get currently selected document"""
         return self.document_selector.get_selected_document()
 
     @selected_document.setter
     def selected_document(self, filename: Optional[str]) -> None:
-        """Set selected document via property"""
         if filename is None:
             self.clear_selected_document()
         else:

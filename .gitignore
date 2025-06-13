@@ -112,3 +112,5 @@ docs/_build/
 *.7z
 
 agent_configs.json
+chat_history/conversations/
+chat_history/*.json

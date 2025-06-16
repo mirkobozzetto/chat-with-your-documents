@@ -36,18 +36,6 @@ python cli.py path/to/your/document.pdf
 python3 cli.py path/to/your/document.pdf
 ```
 
-## Architecture
-
-```
-rag-ai/
-├── app.py                    # Streamlit interface
-├── rag_system.py             # RAG system
-├── config.py                 # Configuration
-├── cli.py                    # Command line demo
-├── requirements.txt          # Dependencies
-└── chroma_db/                # Vector database (auto-created)
-```
-
 ## Technical Stack
 
 - **LangChain**: RAG framework with experimental semantic chunking

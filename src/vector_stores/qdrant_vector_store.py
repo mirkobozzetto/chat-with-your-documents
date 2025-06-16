@@ -221,7 +221,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             )
 
             metadatas = []
-            print(f"�� Found {len(scroll_result[0])} points in collection")
+            print(f"🔍 Found {len(scroll_result[0])} points in collection")
 
             for point in scroll_result[0]:
                 if point.payload:

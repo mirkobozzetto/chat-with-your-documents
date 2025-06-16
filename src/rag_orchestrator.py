@@ -2,6 +2,7 @@
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+import time
 
 from config import (
     OPENAI_API_KEY,
@@ -14,11 +15,11 @@ from config import (
     RETRIEVAL_K,
     RETRIEVAL_FETCH_K,
     RETRIEVAL_LAMBDA_MULT,
-    CHROMA_PERSIST_DIRECTORY
+    VECTOR_STORE_TYPE
 )
 
 from src.document_processor import DocumentProcessor
-from src.vector_store_manager import VectorStoreManager
+from src.vector_stores import VectorStoreFactory
 from src.document_selector import DocumentSelector
 from src.qa_manager import QAManager
 
@@ -29,9 +30,7 @@ class OptimizedRAGSystem:
         print("🚀 Initializing Optimized RAG System...")
 
         self._initialize_ai_services()
-
         self._initialize_components()
-
         self._initialize_system()
 
     def _initialize_ai_services(self):
@@ -54,9 +53,8 @@ class OptimizedRAGSystem:
             chunk_overlap=CHUNK_OVERLAP
         )
 
-        self.vector_store_manager = VectorStoreManager(
-            embeddings=self.embeddings,
-            persist_directory=CHROMA_PERSIST_DIRECTORY
+        self.vector_store_manager = VectorStoreFactory.create_vector_store_manager(
+            embeddings=self.embeddings
         )
 
         self.document_selector = DocumentSelector(
@@ -94,6 +92,7 @@ class OptimizedRAGSystem:
         try:
             print(f"\n🎯 Processing document with Optimized RAG System")
             print(f"📊 Configuration:")
+            print(f"   • Vector Store: {VECTOR_STORE_TYPE.upper()}")
             print(f"   • Embedding Model: {EMBEDDING_MODEL}")
             print(f"   • Chat Model: {CHAT_MODEL}")
             print(f"   • Chunk Strategy: {CHUNK_STRATEGY}")
@@ -103,7 +102,18 @@ class OptimizedRAGSystem:
             chunks = self.document_processor.process_document_pipeline(pdf_path)
             self.vector_store_manager.create_vector_store(chunks)
 
+            time.sleep(1)
+
+            available_docs = self.document_selector.get_available_documents()
+            print(f"📚 Available documents after processing: {available_docs}")
+
             filename = Path(pdf_path).name
+            if filename not in available_docs:
+                print(f"⚠️ Document {filename} not yet available, waiting...")
+                time.sleep(2)
+                available_docs = self.document_selector.get_available_documents()
+                print(f"📚 Available documents after wait: {available_docs}")
+
             self.document_selector.set_selected_document(filename)
             self.qa_manager.create_qa_chain()
 
@@ -112,7 +122,7 @@ class OptimizedRAGSystem:
             print(f"   • Latest OpenAI models")
             print(f"   • {CHUNK_STRATEGY.title()} chunking strategy")
             print(f"   • MMR retrieval for diverse results")
-            print(f"   • Batch processing for efficiency")
+            print(f"   • {VECTOR_STORE_TYPE.upper()} vector store")
 
         except Exception as e:
             print(f"❌ Error processing document: {str(e)}")
@@ -128,11 +138,12 @@ class OptimizedRAGSystem:
         chunk_count = self.vector_store_manager.get_chunk_count()
         doc_stats = self.document_selector.get_document_stats()
 
-        return {
+        stats = {
             "total_documents": doc_stats["total_documents"],
             "total_chunks": chunk_count,
             "available_documents": doc_stats["available_documents"],
             "selected_document": doc_stats["selected_document"],
+            "vector_store_type": VECTOR_STORE_TYPE,
             "embedding_model": EMBEDDING_MODEL,
             "chat_model": CHAT_MODEL,
             "chunk_strategy": CHUNK_STRATEGY,
@@ -143,6 +154,11 @@ class OptimizedRAGSystem:
             "retrieval_fetch_k": RETRIEVAL_FETCH_K,
             "retrieval_lambda_mult": RETRIEVAL_LAMBDA_MULT
         }
+
+        if hasattr(self.vector_store_manager, 'get_connection_info'):
+            stats["connection_info"] = self.vector_store_manager.get_connection_info()
+
+        return stats
 
     def get_available_documents(self) -> List[str]:
         return self.document_selector.get_available_documents()

@@ -1,11 +1,11 @@
 # src/document_selector.py
 from typing import List, Optional
-from src.vector_store_manager import VectorStoreManager
+from src.vector_stores.base_vector_store import BaseVectorStoreManager
 
 
 class DocumentSelector:
 
-    def __init__(self, vector_store_manager: VectorStoreManager):
+    def __init__(self, vector_store_manager: BaseVectorStoreManager):
         self.vector_store_manager = vector_store_manager
         self.selected_document: Optional[str] = None
 

@@ -2,14 +2,14 @@
 from typing import Optional, List, Dict, Any
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
-from src.vector_store_manager import VectorStoreManager
+from src.vector_stores.base_vector_store import BaseVectorStoreManager
 from src.document_selector import DocumentSelector
 from src.agents import AgentManager
 
 
 class QAManager:
 
-    def __init__(self, llm, vector_store_manager: VectorStoreManager,
+    def __init__(self, llm, vector_store_manager: BaseVectorStoreManager,
                  document_selector: DocumentSelector, retrieval_k: int,
                  retrieval_fetch_k: int, retrieval_lambda_mult: float):
         self.llm = llm

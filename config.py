@@ -1,4 +1,4 @@
-# src/config.py
+# config.py
 import os
 from dotenv import load_dotenv
 
@@ -8,7 +8,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY must be set in environment variables")
 
-# Add default values to prevent None
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o")
 
@@ -21,4 +20,16 @@ RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "4"))
 RETRIEVAL_FETCH_K = int(os.getenv("RETRIEVAL_FETCH_K", "20"))
 RETRIEVAL_LAMBDA_MULT = float(os.getenv("RETRIEVAL_LAMBDA_MULT", "0.7"))
 
-CHROMA_PERSIST_DIRECTORY = "./chroma_db"
+VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "chroma")
+
+CHROMA_PERSIST_DIRECTORY = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
+
+QDRANT_URL = os.getenv("QDRANT_URL", "https://qdrant.mirko.re")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "rag_documents")
+QDRANT_TIMEOUT = int(os.getenv("QDRANT_TIMEOUT", "60"))
+QDRANT_VERIFY_SSL = os.getenv("QDRANT_VERIFY_SSL", "false").lower() == "true"
+
+AUTH_ENABLED = os.getenv("AUTH_ENABLED", "false").lower() == "true"
+AUTH_USERS = os.getenv("AUTH_USERS", "")
+AUTH_GLOBAL_ACCESS = os.getenv("AUTH_GLOBAL_ACCESS", "true").lower() == "true"

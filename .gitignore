@@ -114,3 +114,4 @@ docs/_build/
 agent_configs.json
 chat_history/conversations/
 chat_history/*.json
+auth_users.json

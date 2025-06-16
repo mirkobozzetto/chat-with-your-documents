@@ -1,3 +1,5 @@
+# requirements.txt
+
 # Core RAG dependencies
 langchain>=0.1.0
 langchain-openai>=0.1.0
@@ -17,6 +19,9 @@ pypdf>=4.0.0
 
 # Web interface
 streamlit>=1.31.0
+
+# Authentication
+bcrypt>=4.0.0
 
 # Utilities
 python-dotenv>=1.0.0

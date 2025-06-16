@@ -1,11 +1,23 @@
-# ui/session_manager.py
+# src/ui/session_manager.py
 import streamlit as st
 import os
 from rag_system import OptimizedRAGSystem as RAGSystem
+from src.auth import AuthManager
 
 
 class SessionManager:
-    """Manages Streamlit session state and RAG system initialization"""
+    """Manages Streamlit session state, authentication and RAG system initialization"""
+
+    def __init__(self):
+        self.auth_manager = AuthManager()
+
+    def check_authentication(self) -> bool:
+        """Check authentication status and redirect if needed"""
+        return self.auth_manager.is_user_authenticated()
+
+    def get_current_user(self) -> str:
+        """Get currently authenticated user"""
+        return self.auth_manager.get_current_user()
 
     @staticmethod
     def check_api_key() -> bool:
@@ -42,3 +54,30 @@ class SessionManager:
     def get_rag_system() -> RAGSystem:
         """Get current RAG system instance"""
         return st.session_state.rag_system
+
+    def get_session_info(self) -> dict:
+        """Get complete session information"""
+        auth_info = self.auth_manager.get_session_info()
+
+        session_info = {
+            "authenticated": auth_info["authenticated"],
+            "auth_enabled": self.auth_manager.config.is_auth_enabled()
+        }
+
+        if auth_info["authenticated"]:
+            session_info.update({
+                "username": auth_info["username"],
+                "login_time": auth_info["login_time"],
+                "expires_at": auth_info["expires_at"],
+                "time_remaining": auth_info["time_remaining"]
+            })
+
+        return session_info
+
+    def logout(self) -> None:
+        """Logout user and clear session"""
+        self.auth_manager.logout_user()
+        # Clear RAG system and other session data
+        for key in ['rag_system', 'messages']:
+            if key in st.session_state:
+                del st.session_state[key]

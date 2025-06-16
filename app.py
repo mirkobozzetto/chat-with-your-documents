@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 from src.ui.session_manager import SessionManager
-from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface, AgentConfiguration
+from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface, AgentConfiguration, AuthComponent
 from src.ui.adapters import StreamlitChatHistoryAdapter
 
 
@@ -13,25 +13,35 @@ def setup_page_config():
     )
 
 
+def check_authentication() -> bool:
+    auth_component = AuthComponent()
+    return auth_component.protect_app()
+
+
 def render_page_header():
     st.title("🤖 RAG AI Assistant")
     st.markdown("Upload documents and ask questions about their content using OpenAI embeddings.")
 
 
 def initialize_systems():
-    if not SessionManager.check_api_key():
+    session_manager = SessionManager()
+
+    if not session_manager.check_api_key():
         st.stop()
 
-    rag_system = SessionManager.initialize_rag_system()
+    rag_system = session_manager.initialize_rag_system()
     chat_history = StreamlitChatHistoryAdapter()
 
     available_docs = rag_system.get_available_documents()
     rag_system.qa_manager.sync_agents_with_documents(available_docs)
 
-    return rag_system, chat_history
+    return rag_system, chat_history, session_manager
 
 
-def render_sidebar(rag_system, chat_history):
+def render_sidebar(rag_system, chat_history, session_manager):
+    auth_component = AuthComponent()
+    auth_component.render_user_info()
+
     with st.sidebar:
         DocumentManagement.render_upload_section(rag_system)
         DocumentManagement.render_selection_section(rag_system)
@@ -42,6 +52,8 @@ def render_sidebar(rag_system, chat_history):
         chat_history.render_conversation_sidebar()
 
         KnowledgeBaseStats.render_stats_section(rag_system)
+
+        auth_component.render_auth_status()
 
 
 def render_main_content(rag_system, chat_history):
@@ -136,11 +148,15 @@ def render_clear_button(chat_history):
 
 def main():
     setup_page_config()
+
+    if not check_authentication():
+        return
+
     render_page_header()
 
-    rag_system, chat_history = initialize_systems()
+    rag_system, chat_history, session_manager = initialize_systems()
 
-    render_sidebar(rag_system, chat_history)
+    render_sidebar(rag_system, chat_history, session_manager)
     render_main_content(rag_system, chat_history)
 
     render_clear_button(chat_history)

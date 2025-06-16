@@ -83,15 +83,37 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
                 from langchain.schema import BaseRetriever
 
                 class CustomRetriever(BaseRetriever):
-                    def __init__(self, client, collection_name):
+                    def __init__(self, client, collection_name, embeddings):
                         super().__init__()
                         self._client = client
                         self._collection_name = collection_name
+                        self._embeddings = embeddings
 
                     def _get_relevant_documents(self, query, **kwargs):
-                        return []
+                        try:
+                            query_vector = self._embeddings.embed_query(query)
+                            results = self._client.search(
+                                collection_name=self._collection_name,
+                                query_vector=query_vector,
+                                limit=kwargs.get('k', 4),
+                                with_payload=True
+                            )
 
-                return CustomRetriever(self._client, self.collection_name)
+                            documents = []
+                            for result in results:
+                                if result.payload:
+                                    doc = Document(
+                                        page_content=result.payload.get('page_content', ''),
+                                        metadata=result.payload.get('metadata', {})
+                                    )
+                                    documents.append(doc)
+
+                            return documents
+                        except Exception as e:
+                            print(f"⚠️ Search error: {e}")
+                            return []
+
+                return CustomRetriever(self._client, self.collection_name, self.embeddings)
 
             def add_documents(self, documents):
                 print(f"📝 Adding {len(documents)} documents via wrapper")
@@ -199,7 +221,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             )
 
             metadatas = []
-            print(f"🔍 Found {len(scroll_result[0])} points in collection")
+            print(f"�� Found {len(scroll_result[0])} points in collection")
 
             for point in scroll_result[0]:
                 if point.payload:

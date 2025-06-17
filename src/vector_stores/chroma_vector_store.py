@@ -1,6 +1,6 @@
 # src/vector_stores/chroma_vector_store.py
 import os
-from typing import List, Optional
+from typing import List, Optional, Callable
 from langchain_chroma import Chroma
 from langchain.schema import Document
 from .base_vector_store import BaseVectorStoreManager
@@ -34,7 +34,7 @@ class ChromaVectorStoreManager(BaseVectorStoreManager):
             return False
         return False
 
-    def create_vector_store(self, chunks: List[Document]) -> None:
+    def create_vector_store(self, chunks: List[Document], progress_callback: Optional[Callable] = None) -> None:
         print("🗄️ Creating ChromaDB vector store...")
 
         if not self.vector_store:
@@ -52,6 +52,10 @@ class ChromaVectorStoreManager(BaseVectorStoreManager):
             print(f"📦 Processing batch {batch_num}/{total_batches}")
 
             self.vector_store.add_documents(batch)
+
+            if progress_callback:
+                progress = 0.9 + (batch_num / total_batches) * 0.1
+                progress_callback(progress, f"Batch {batch_num}/{total_batches}")
 
         print(f"✅ ChromaDB vector store created with {len(chunks)} chunks")
 

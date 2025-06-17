@@ -1,5 +1,5 @@
 # src/rag_orchestrator.py
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import time
@@ -88,7 +88,7 @@ class OptimizedRAGSystem:
     def create_qa_chain(self) -> None:
         self.qa_manager.create_qa_chain()
 
-    def process_pdf(self, pdf_path: str) -> None:
+    def process_pdf(self, pdf_path: str, progress_callback: Optional[Callable] = None) -> None:
         try:
             print(f"\n🎯 Processing document with Optimized RAG System")
             print(f"📊 Configuration:")
@@ -99,8 +99,8 @@ class OptimizedRAGSystem:
             print(f"   • Chunk Size: {CHUNK_SIZE}")
             print(f"   • Chunk Overlap: {CHUNK_OVERLAP}")
 
-            chunks = self.document_processor.process_document_pipeline(pdf_path)
-            self.vector_store_manager.create_vector_store(chunks)
+            chunks = self.document_processor.process_document_pipeline(pdf_path, progress_callback)
+            self.vector_store_manager.create_vector_store(chunks, progress_callback)
 
             time.sleep(1)
 

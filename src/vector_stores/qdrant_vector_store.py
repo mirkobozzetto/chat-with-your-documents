@@ -3,7 +3,7 @@ import os
 import socket
 import urllib3
 import time
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Callable
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from langchain.schema import Document
 from .base_vector_store import BaseVectorStoreManager
@@ -146,7 +146,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             return False
         return False
 
-    def create_vector_store(self, chunks: List[Document]) -> None:
+    def create_vector_store(self, chunks: List[Document], progress_callback: Optional[Callable] = None) -> None:
         print("🗄️ Creating Qdrant vector store...")
 
         if not self._ensure_collection_exists():
@@ -157,7 +157,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
 
         print("📤 Adding documents to Qdrant...")
 
-        batch_size = 20
+        batch_size = 100
         total_batches = (len(chunks) + batch_size - 1) // batch_size
 
         for i in range(0, len(chunks), batch_size):
@@ -166,7 +166,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             print(f"📦 Processing batch {batch_num}/{total_batches}")
 
             try:
-                embeddings = self.embeddings.embed_documents([doc.page_content for doc in batch])
+                embeddings = self._process_embeddings_batch([doc.page_content for doc in batch])
 
                 points = []
                 for j, (doc, embedding) in enumerate(zip(batch, embeddings)):
@@ -182,15 +182,28 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
 
                 self.client.upsert(self.collection_name, points)
 
-                time.sleep(0.5)
-                current_count = self.client.get_collection(self.collection_name).points_count
-                print(f"📊 Points in collection after batch {batch_num}: {current_count}")
+                if progress_callback:
+                    progress = 0.9 + (batch_num / total_batches) * 0.1
+                    progress_callback(progress, f"Batch {batch_num}/{total_batches}")
+
+                time.sleep(0.1)
 
             except Exception as e:
                 print(f"❌ Error in batch {batch_num}: {str(e)}")
                 raise
 
         print(f"✅ Qdrant vector store created with {len(chunks)} chunks")
+
+    def _process_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        embedding_batch_size = 100
+        all_embeddings = []
+
+        for i in range(0, len(texts), embedding_batch_size):
+            batch = texts[i:i + embedding_batch_size]
+            embeddings = self.embeddings.embed_documents(batch)
+            all_embeddings.extend(embeddings)
+
+        return all_embeddings
 
     def get_vector_store(self) -> Optional[Any]:
         return self.vector_store

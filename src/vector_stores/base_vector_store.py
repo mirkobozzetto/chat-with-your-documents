@@ -1,6 +1,6 @@
 # src/vector_stores/base_vector_store.py
 from abc import ABC, abstractmethod
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Callable
 from langchain.schema import Document
 
 
@@ -15,7 +15,7 @@ class BaseVectorStoreManager(ABC):
         pass
 
     @abstractmethod
-    def create_vector_store(self, chunks: List[Document]) -> None:
+    def create_vector_store(self, chunks: List[Document], progress_callback: Optional[Callable] = None) -> None:
         pass
 
     @abstractmethod

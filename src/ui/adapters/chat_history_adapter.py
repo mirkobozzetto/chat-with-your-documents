@@ -102,6 +102,7 @@ class StreamlitChatHistoryAdapter:
         success = self.history_manager.delete_conversation(session_id)
         if success and self.get_current_session_id() == session_id:
             st.session_state.messages = []
+            self.session_manager.end_current_session()
         return success
 
     def export_conversation(self, session_id: str) -> Optional[Dict[str, Any]]:
@@ -126,12 +127,9 @@ class StreamlitChatHistoryAdapter:
                 st.rerun()
 
         with col2:
-            if st.button("🗑️"):
-                if self.has_active_conversation():
-                    session_id = self.get_current_session_id()
-                    if session_id and self.delete_conversation(session_id):
-                        st.success("Conversation supprimée")
-                        st.rerun()
+            if st.button("🗑️ Clear"):
+                self.clear_current_conversation()
+                st.rerun()
 
         search_query = st.text_input("🔍 Rechercher...", placeholder="Tapez pour rechercher")
 
@@ -146,16 +144,27 @@ class StreamlitChatHistoryAdapter:
             st.write("**Conversations récentes:**")
             for conv in conversations:
                 is_current = conv["session_id"] == current_session_id
-                title_display = conv["title"][:40] + ("..." if len(conv["title"]) > 40 else "")
+                title_display = conv["title"][:35] + ("..." if len(conv["title"]) > 35 else "")
 
                 button_style = "🔵" if is_current else "⚪"
-                button_text = f"{button_style} {title_display}"
 
-                if st.button(button_text, key=f"conv_{conv['session_id']}",
-                           help=f"Messages: {conv['message_count']} | {conv['last_activity'].strftime('%d/%m %H:%M')}"):
-                    if not is_current:
-                        self.load_conversation(conv["session_id"])
-                        st.rerun()
+                col_conv, col_del = st.columns([4, 1])
+
+                with col_conv:
+                    if st.button(f"{button_style} {title_display}",
+                               key=f"conv_{conv['session_id']}",
+                               help=f"Messages: {conv['message_count']} | {conv['last_activity'].strftime('%d/%m %H:%M')}"):
+                        if not is_current:
+                            self.load_conversation(conv["session_id"])
+                            st.rerun()
+
+                with col_del:
+                    if st.button("🗑️",
+                               key=f"del_{conv['session_id']}",
+                               help="Supprimer cette conversation"):
+                        if self.delete_conversation(conv["session_id"]):
+                            st.success("Conversation supprimée")
+                            st.rerun()
         else:
             st.info("Aucune conversation trouvée")
 

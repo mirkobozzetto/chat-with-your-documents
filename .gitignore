@@ -115,3 +115,7 @@ agent_configs.json
 chat_history/conversations/
 chat_history/*.json
 auth_users.json
+
+debug_collection.py
+debug_qdrant.py
+test_custom_qdrant.py

@@ -44,14 +44,14 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
     def _ensure_collection_exists(self):
         """Ensure the collection exists and is properly configured"""
         try:
-            print(f"🔍 Ensuring collection '{self.collection_name}' exists...")
+            print(f"🔍 Checking collection '{self.collection_name}'...")
 
             if self.client.collection_exists(self.collection_name):
                 collection_info = self.client.get_collection(self.collection_name)
-                print(f"⚠️ Collection exists but may have wrong dimensions, deleting...")
-                self.client.delete_collection(self.collection_name)
+                print(f"✅ Collection '{self.collection_name}' exists with {collection_info.points_count} points")
+                return True
 
-            print(f"🆕 Creating collection with correct dimensions...")
+            print(f"🆕 Creating new collection '{self.collection_name}'...")
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(
@@ -60,9 +60,6 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
                 )
             )
             print(f"✅ Created collection: {self.collection_name}")
-
-            collection_info = self.client.get_collection(self.collection_name)
-            print(f"📊 Collection info - Points: {collection_info.points_count}")
             return True
 
         except Exception as e:
@@ -184,7 +181,6 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
                     points.append(point)
 
                 self.client.upsert(self.collection_name, points)
-
 
                 time.sleep(0.5)
                 current_count = self.client.get_collection(self.collection_name).points_count

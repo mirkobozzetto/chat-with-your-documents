@@ -120,5 +120,6 @@ chat_history/conversations/
 chat_history/*.json
 auth_users.json
 last_document_selection.json
+auth_users.json
 
 

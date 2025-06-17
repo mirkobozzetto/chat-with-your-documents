@@ -4,12 +4,12 @@ import socket
 import urllib3
 import time
 from typing import List, Optional, Any
-from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from langchain.schema import Document
 from .base_vector_store import BaseVectorStoreManager
 from .custom_qdrant_client import CustomQdrantClient
 
+"""Force IPv4 for Qdrant connection"""
 old_getaddrinfo = socket.getaddrinfo
 def force_ipv4_getaddrinfo(*args, **kwargs):
     responses = old_getaddrinfo(*args, **kwargs)

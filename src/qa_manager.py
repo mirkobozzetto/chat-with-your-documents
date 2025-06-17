@@ -1,7 +1,6 @@
 # src/qa_manager.py
 from typing import Optional, List, Dict, Any
 from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
 from src.document_selector import DocumentSelector
 from src.agents import AgentManager

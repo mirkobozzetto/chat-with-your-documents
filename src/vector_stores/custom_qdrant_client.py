@@ -1,9 +1,8 @@
 # src/vector_stores/custom_qdrant_client.py
-import os
 import requests
 import uuid
-from typing import List, Dict, Any, Optional
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from typing import List, Dict, Any
+from qdrant_client.models import VectorParams, PointStruct
 import urllib3
 import json
 

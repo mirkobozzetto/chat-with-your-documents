@@ -111,11 +111,14 @@ docs/_build/
 *.rar
 *.7z
 
+debug_collection.py
+debug_qdrant.py
+test_custom_qdrant.py
+
 agent_configs.json
 chat_history/conversations/
 chat_history/*.json
 auth_users.json
+last_document_selection.json
 
-debug_collection.py
-debug_qdrant.py
-test_custom_qdrant.py
+

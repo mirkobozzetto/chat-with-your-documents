@@ -15,13 +15,15 @@ from .vector_store_manager import VectorStoreManager
 from .document_selector import DocumentSelector
 from .qa_manager import QAManager
 from .rag_orchestrator import OptimizedRAGSystem
+from .auth.auth_manager import AuthManager
 
 __all__ = [
     'DocumentProcessor',
     'VectorStoreManager',
     'DocumentSelector',
     'QAManager',
-    'OptimizedRAGSystem'
+    'OptimizedRAGSystem',
+    'AuthManager'
 ]
 
 __version__ = '1.0.0'

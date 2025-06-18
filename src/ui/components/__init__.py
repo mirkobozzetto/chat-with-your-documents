@@ -15,11 +15,13 @@ from .knowledge_base_stats import KnowledgeBaseStats
 from .chat_interface import ChatInterface
 from .agent_configuration import AgentConfiguration
 from .auth_component import AuthComponent
+from .debug_sidebar import DebugSidebar
 
 __all__ = [
     'DocumentManagement',
     'KnowledgeBaseStats',
     'ChatInterface',
     'AgentConfiguration',
-    'AuthComponent'
+    'AuthComponent',
+    'DebugSidebar'
 ]

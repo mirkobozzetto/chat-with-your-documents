@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 from src.ui.session_manager import SessionManager
-from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface, AgentConfiguration, AuthComponent
+from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface, AgentConfiguration, AuthComponent, DebugSidebar
 from src.ui.adapters import StreamlitChatHistoryAdapter
 
 
@@ -52,6 +52,9 @@ def render_sidebar(rag_system, chat_history, session_manager):
         chat_history.render_conversation_sidebar()
 
         KnowledgeBaseStats.render_stats_section(rag_system)
+
+        DebugSidebar.render_retrieval_debug(rag_system)
+        DebugSidebar.render_quick_settings(rag_system)
 
         auth_component.render_auth_status()
 

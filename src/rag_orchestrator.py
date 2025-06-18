@@ -90,7 +90,8 @@ class OptimizedRAGSystem:
 
     def process_pdf(self, pdf_path: str, progress_callback: Optional[Callable] = None) -> None:
         try:
-            print(f"\n🎯 Processing document with Optimized RAG System")
+            filename = Path(pdf_path).name
+            print(f"\n🎯 Processing document with Optimized RAG System: {filename}")
             print(f"📊 Configuration:")
             print(f"   • Vector Store: {VECTOR_STORE_TYPE.upper()}")
             print(f"   • Embedding Model: {EMBEDDING_MODEL}")
@@ -98,6 +99,10 @@ class OptimizedRAGSystem:
             print(f"   • Chunk Strategy: {CHUNK_STRATEGY}")
             print(f"   • Chunk Size: {CHUNK_SIZE}")
             print(f"   • Chunk Overlap: {CHUNK_OVERLAP}")
+
+            # Set current document for vector store manager
+            if hasattr(self.vector_store_manager, 'set_current_document'):
+                self.vector_store_manager.set_current_document(filename)
 
             chunks = self.document_processor.process_document_pipeline(pdf_path, progress_callback)
             self.vector_store_manager.create_vector_store(chunks, progress_callback)
@@ -107,7 +112,6 @@ class OptimizedRAGSystem:
             available_docs = self.document_selector.get_available_documents()
             print(f"📚 Available documents after processing: {available_docs}")
 
-            filename = Path(pdf_path).name
             if filename not in available_docs:
                 print(f"⚠️ Document {filename} not yet available, waiting...")
                 time.sleep(2)
@@ -122,7 +126,7 @@ class OptimizedRAGSystem:
             print(f"   • Latest OpenAI models")
             print(f"   • {CHUNK_STRATEGY.title()} chunking strategy")
             print(f"   • MMR retrieval for diverse results")
-            print(f"   • {VECTOR_STORE_TYPE.upper()} vector store")
+            print(f"   • {VECTOR_STORE_TYPE.upper()} vector store with per-document collections")
 
         except Exception as e:
             print(f"❌ Error processing document: {str(e)}")
@@ -181,3 +185,86 @@ class OptimizedRAGSystem:
             self.clear_selected_document()
         else:
             self.set_selected_document(filename)
+
+    def delete_document(self, document_filename: str) -> bool:
+        """Delete a document and all its chunks from the vector store"""
+        try:
+            print(f"🗑️ Deleting document: {document_filename}")
+
+            # Check if document exists (get fresh data)
+            available_docs = self.get_available_documents()
+            if document_filename not in available_docs:
+                print(f"❌ Document not found: {document_filename}")
+                return False
+
+            # Clear selection if deleting selected document
+            if self.selected_document == document_filename:
+                self.clear_selected_document()
+
+            # Delete from vector store
+            success = self.vector_store_manager.delete_document(document_filename)
+
+            if success:
+                # Force refresh of available documents after deletion
+                print(f"🔄 Forcing refresh of document list...")
+                
+                # Get updated document list
+                remaining_docs = self.get_available_documents()
+                print(f"📋 Documents after deletion: {remaining_docs}")
+                
+                if remaining_docs:
+                    self.qa_manager.create_qa_chain()
+                    print(f"✅ Document deleted successfully. {len(remaining_docs)} documents remaining.")
+                else:
+                    print(f"✅ Document deleted. Knowledge base is now empty.")
+                    
+                # Clear any cached document selection persistence if document was deleted
+                if document_filename not in remaining_docs:
+                    self.document_selector.persistence.clear_selection()
+                    
+            else:
+                print(f"❌ Failed to delete document: {document_filename}")
+
+            return success
+
+        except Exception as e:
+            print(f"❌ Error deleting document {document_filename}: {str(e)}")
+            return False
+
+    def get_document_info(self, document_filename: str) -> Optional[Dict[str, Any]]:
+        """Get detailed information about a specific document"""
+        try:
+            available_docs = self.get_available_documents()
+            if document_filename not in available_docs:
+                return None
+
+            chunk_count = self.vector_store_manager.get_document_chunk_count(document_filename)
+
+            # Get metadata for this document
+            all_metadata = self.vector_store_manager.get_all_metadata()
+            doc_metadata = [m for m in all_metadata if m.get('source_filename') == document_filename]
+
+            # Calculate stats
+            chapters = set()
+            sections = set()
+            total_words = 0
+
+            for meta in doc_metadata:
+                if meta.get('chapter_number'):
+                    chapters.add(meta['chapter_number'])
+                if meta.get('section_number'):
+                    sections.add(meta['section_number'])
+                total_words += meta.get('word_count', 0)
+
+            return {
+                "filename": document_filename,
+                "chunk_count": chunk_count,
+                "total_words": total_words,
+                "chapters": sorted(list(chapters)),
+                "sections": sorted(list(sections)),
+                "document_type": doc_metadata[0].get('document_type', 'unknown') if doc_metadata else 'unknown'
+            }
+
+        except Exception as e:
+            print(f"⚠️ Error getting document info for {document_filename}: {str(e)}")
+            return None

@@ -149,7 +149,7 @@ class CustomQdrantClient:
             "limit": limit,
             "with_payload": with_payload
         }
-        
+
         if filter:
             payload["filter"] = filter
 
@@ -163,6 +163,30 @@ class CustomQdrantClient:
 
         points_data = result.get('result', [])
         return [ScoredPoint(p) for p in points_data]
+
+    def delete_points_by_filter(self, collection_name: str, filter_condition: Dict[str, Any]):
+        """Delete points matching filter condition"""
+        payload = {
+            "filter": filter_condition,
+            "wait": True
+        }
+
+        result = self._request("POST", f"/collections/{collection_name}/points/delete", json=payload)
+        return result
+
+    def count_points_by_filter(self, collection_name: str, filter_condition: Dict[str, Any]) -> int:
+        """Count points matching filter condition"""
+        payload = {
+            "filter": filter_condition,
+            "exact": True
+        }
+
+        try:
+            result = self._request("POST", f"/collections/{collection_name}/points/count", json=payload)
+            return result.get('result', {}).get('count', 0)
+        except Exception as e:
+            print(f"⚠️ Error counting points: {e}")
+            return 0
 
     def close(self):
         self.session.close()

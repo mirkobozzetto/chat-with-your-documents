@@ -33,3 +33,13 @@ class BaseVectorStoreManager(ABC):
     @abstractmethod
     def _load_existing_vector_store(self) -> Optional[Any]:
         pass
+
+    @abstractmethod
+    def delete_document(self, document_filename: str) -> bool:
+        """Delete all chunks for a specific document from vector store"""
+        pass
+
+    @abstractmethod
+    def get_document_chunk_count(self, document_filename: str) -> int:
+        """Get number of chunks for a specific document"""
+        pass

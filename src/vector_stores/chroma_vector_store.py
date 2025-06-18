@@ -82,3 +82,48 @@ class ChromaVectorStoreManager(BaseVectorStoreManager):
         except Exception as e:
             print(f"⚠️ Error getting metadata: {str(e)}")
             return []
+
+    def delete_document(self, document_filename: str) -> bool:
+        """Delete all chunks for a specific document from ChromaDB"""
+        if not self.vector_store:
+            print(f"❌ No vector store available")
+            return False
+
+        try:
+            collection = self.vector_store._collection
+
+            # Get all documents with this filename
+            results = collection.get(
+                where={"source_filename": document_filename},
+                include=["documents", "metadatas"]
+            )
+
+            if not results["ids"]:
+                print(f"📭 No chunks found for document: {document_filename}")
+                return True  # Nothing to delete is still success
+
+            # Delete all chunks for this document
+            collection.delete(ids=results["ids"])
+
+            print(f"🗑️ Deleted {len(results['ids'])} chunks for document: {document_filename}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error deleting document {document_filename}: {str(e)}")
+            return False
+
+    def get_document_chunk_count(self, document_filename: str) -> int:
+        """Get number of chunks for a specific document"""
+        if not self.vector_store:
+            return 0
+
+        try:
+            collection = self.vector_store._collection
+            results = collection.get(
+                where={"source_filename": document_filename},
+                include=[]
+            )
+            return len(results["ids"])
+        except Exception as e:
+            print(f"⚠️ Error counting chunks for {document_filename}: {str(e)}")
+            return 0

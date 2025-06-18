@@ -5,6 +5,8 @@
 .env.staging
 *.key
 
+.claude/
+
 # Vector databases and embeddings
 chroma_db/
 chroma_db_*/

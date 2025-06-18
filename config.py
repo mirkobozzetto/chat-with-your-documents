@@ -9,16 +9,17 @@ if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY must be set in environment variables")
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
+
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4.1-2025-04-14")
 
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "800"))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "150"))
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1500"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "300"))
 CHUNK_STRATEGY = os.getenv("CHUNK_STRATEGY", "semantic")
 
 CHAT_TEMPERATURE = float(os.getenv("CHAT_TEMPERATURE", "0.1"))
-RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "3"))
-RETRIEVAL_FETCH_K = int(os.getenv("RETRIEVAL_FETCH_K", "15"))
-RETRIEVAL_LAMBDA_MULT = float(os.getenv("RETRIEVAL_LAMBDA_MULT", "0.95"))
+RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "6"))
+RETRIEVAL_FETCH_K = int(os.getenv("RETRIEVAL_FETCH_K", "25"))
+RETRIEVAL_LAMBDA_MULT = float(os.getenv("RETRIEVAL_LAMBDA_MULT", "0.8"))
 
 VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "chroma")
 

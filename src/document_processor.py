@@ -33,7 +33,15 @@ class DocumentProcessor:
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 length_function=len,
-                separators=["\n\n", "\n", " ", ""]
+                separators=[
+                    "\n\n\n",
+                    "\n\n",
+                    "\n",
+                    ". ",
+                    ", ",
+                    " ",
+                    ""
+                ]
             )
 
     def load_document(self, file_path: str, progress_callback: Optional[Callable] = None) -> List[Document]:
@@ -86,14 +94,13 @@ class DocumentProcessor:
             progress_callback(0.6, "Chunking documents...")
 
         if self.chunk_strategy == "semantic":
-            # Create a mapping of text positions to metadata for semantic chunking
             text_sections = []
             section_metadata = []
-            
+
             for doc in documents:
                 text_sections.append(doc.page_content)
                 section_metadata.append(doc.metadata)
-            
+
             combined_text = "\n\n".join(text_sections)
             chunks = self.text_splitter.create_documents([combined_text])
 
@@ -104,19 +111,16 @@ class DocumentProcessor:
                 chunk.metadata["source_filename"] = filename
                 chunk.metadata["document_type"] = doc_type
 
-                # Extract chapter info for each chunk
                 chapter_info = self._extract_chapter_info(chunk.page_content)
                 if chapter_info:
                     chunk.metadata.update(chapter_info)
                 else:
-                    # If no chapter info found, try to inherit from nearby content
                     inherited_metadata = self._inherit_metadata_from_nearby_content(
                         chunk.page_content, text_sections, section_metadata
                     )
                     if inherited_metadata:
                         chunk.metadata.update(inherited_metadata)
 
-                # Add chunk index for better tracking
                 chunk.metadata["chunk_index"] = i
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -132,11 +136,9 @@ class DocumentProcessor:
                 for future in concurrent.futures.as_completed(chunk_futures):
                     batch_chunks = future.result()
                     for i, chunk in enumerate(batch_chunks):
-                        # Extract chapter info for each chunk
                         chapter_info = self._extract_chapter_info(chunk.page_content)
                         if chapter_info:
                             chunk.metadata.update(chapter_info)
-                        # Add global chunk index
                         chunk.metadata["chunk_index"] = len(chunks) + i
                     chunks.extend(batch_chunks)
 
@@ -230,7 +232,7 @@ class DocumentProcessor:
         """Normalize chapter numbers (convert roman to arabic if needed)."""
         if not chapter_str:  # Check for None or empty string
             return ""
-            
+
         roman_to_arabic = {
             'i': '1', 'ii': '2', 'iii': '3', 'iv': '4', 'v': '5',
             'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10',
@@ -243,24 +245,24 @@ class DocumentProcessor:
             return roman_to_arabic[chapter_lower]
 
         return chapter_str.strip()
-    
+
     def _inherit_metadata_from_nearby_content(self, chunk_text: str, original_sections: List[str], section_metadata: List[dict]) -> Optional[dict]:
         """Try to inherit chapter metadata from nearby content in the original document."""
         if not chunk_text or not original_sections:
             return None
-            
+
         chunk_words = set(chunk_text.lower().split()[:20])  # First 20 words of chunk
-        
+
         best_match_score = 0
         best_metadata = None
-        
+
         for section_text, metadata in zip(original_sections, section_metadata):
             if not section_text or len(section_text.strip()) < 50:
                 continue
-                
+
             section_words = set(section_text.lower().split()[:50])  # First 50 words of section
             overlap = len(chunk_words.intersection(section_words))
-            
+
             if overlap > best_match_score:
                 best_match_score = overlap
                 # Only inherit chapter-related metadata
@@ -268,8 +270,8 @@ class DocumentProcessor:
                 for key in ['chapter_number', 'chapter_title', 'section_number', 'subsection_number', 'section_title']:
                     if key in metadata:
                         chapter_metadata[key] = metadata[key]
-                
+
                 if chapter_metadata:
                     best_metadata = chapter_metadata
-        
+
         return best_metadata if best_match_score > 2 else None

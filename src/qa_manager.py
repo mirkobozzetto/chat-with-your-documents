@@ -1,4 +1,5 @@
 # src/qa_manager.py
+import re
 from typing import Optional, List, Dict, Any
 from langchain.chains import RetrievalQA
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
@@ -70,7 +71,20 @@ class QAManager:
         print("🤔 Thinking...")
 
         enhanced_query = self._build_enhanced_query_with_agent(question, chat_history, selected_document)
-        result = self.qa_chain.invoke({"query": enhanced_query})
+        
+        # Check if question mentions specific chapter and apply additional filtering
+        chapter_filter = self._extract_chapter_filter(question)
+        if chapter_filter:
+            print(f"🔍 Detected chapter query: {chapter_filter}")
+            result = self._query_with_chapter_filter(enhanced_query, chapter_filter)
+        else:
+            result = self.qa_chain.invoke({"query": enhanced_query})
+        
+        # Debug: Print metadata of retrieved documents
+        print("🔍 DEBUG: Retrieved documents metadata:")
+        for i, doc in enumerate(result["source_documents"]):
+            metadata_summary = {k: v for k, v in doc.metadata.items() if k in ['chapter_number', 'section_number', 'chapter_title', 'source_filename']}
+            print(f"   Doc {i+1}: {metadata_summary}")
 
         print(f"\n💡 Answer: {result['result']}")
         print(f"\n📚 Sources used: {len(result['source_documents'])} chunks")
@@ -123,3 +137,110 @@ Please answer the current question considering the conversation context above.""
 
     def sync_agents_with_documents(self, available_documents: List[str]) -> None:
         self.agent_manager.sync_with_available_documents(available_documents)
+    
+    def _extract_chapter_filter(self, question: str) -> Optional[Dict[str, str]]:
+        """Extract chapter information from the user's question."""
+        chapter_patterns = [
+            r'chapitre\s+(\d+|[ivxlc]+)',
+            r'chapter\s+(\d+|[ivxlc]+)',
+            r'section\s+(\d+|[ivxlc]+)',
+            r'partie\s+(\d+|[ivxlc]+)',
+            r'(\d+)\.(\d+)',  # e.g., "1.2"
+        ]
+        
+        question_lower = question.lower()
+        
+        for pattern in chapter_patterns:
+            match = re.search(pattern, question_lower)
+            if match:
+                groups = match.groups()
+                if len(groups) == 2 and groups[0] and groups[1]:  # Section numbering like "1.2"
+                    return {
+                        "section_number": groups[0],
+                        "subsection_number": groups[1]
+                    }
+                elif groups and len(groups) > 0 and groups[0]:
+                    chapter_num = self._normalize_chapter_number(groups[0])
+                    if chapter_num:  # Only return if we have a valid chapter number
+                        if 'chapitre' in pattern or 'chapter' in pattern:
+                            return {"chapter_number": chapter_num}
+                        else:
+                            return {"section_number": chapter_num}
+        
+        return None
+    
+    def _normalize_chapter_number(self, chapter_str: str) -> str:
+        """Normalize chapter numbers (convert roman to arabic if needed)."""
+        if not chapter_str:  # Check for None or empty string
+            return ""
+            
+        roman_to_arabic = {
+            'i': '1', 'ii': '2', 'iii': '3', 'iv': '4', 'v': '5',
+            'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10',
+            'xi': '11', 'xii': '12', 'xiii': '13', 'xiv': '14', 'xv': '15',
+            'xvi': '16', 'xvii': '17', 'xviii': '18', 'xix': '19', 'xx': '20'
+        }
+        
+        chapter_lower = chapter_str.lower().strip()
+        if chapter_lower in roman_to_arabic:
+            return roman_to_arabic[chapter_lower]
+        
+        return chapter_str.strip()
+    
+    def _query_with_chapter_filter(self, query: str, chapter_filter: Dict[str, str]) -> Dict[str, Any]:
+        """Query with specific chapter filtering."""
+        vector_store = self.vector_store_manager.get_vector_store()
+        
+        # Build filter for chapter-specific metadata
+        metadata_filter = {}
+        document_filter = self.document_selector.get_document_filter()
+        if document_filter:
+            metadata_filter.update(document_filter)
+        
+        # Add chapter-specific filters
+        for key, value in chapter_filter.items():
+            metadata_filter[key] = value
+        
+        # Create a new retriever with chapter-specific filtering
+        search_kwargs = {
+            "k": self.retrieval_k * 2,  # Get more results for better chapter matching
+            "fetch_k": self.retrieval_fetch_k * 2,
+            "lambda_mult": self.retrieval_lambda_mult,
+            "filter": metadata_filter
+        }
+        
+        retriever = vector_store.as_retriever(
+            search_type="mmr",
+            search_kwargs=search_kwargs
+        )
+        
+        # Create temporary QA chain for this specific query
+        chapter_qa_chain = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=retriever,
+            return_source_documents=True,
+            verbose=False
+        )
+        
+        result = chapter_qa_chain.invoke({"query": query})
+        
+        # Filter results to ensure they match the requested chapter
+        filtered_docs = []
+        for doc in result["source_documents"]:
+            doc_matches = False
+            for key, value in chapter_filter.items():
+                if doc.metadata.get(key) == value:
+                    doc_matches = True
+                    break
+            if doc_matches:
+                filtered_docs.append(doc)
+        
+        # If we have filtered docs, use them; otherwise fallback to original results
+        if filtered_docs:
+            result["source_documents"] = filtered_docs
+            print(f"📊 Found {len(filtered_docs)} chapter-specific documents")
+        else:
+            print("⚠️ No chapter-specific documents found, using general results")
+        
+        return result

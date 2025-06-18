@@ -1,7 +1,7 @@
 # src/vector_stores/custom_qdrant_client.py
 import requests
 import uuid
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from qdrant_client.models import VectorParams, PointStruct
 import urllib3
 import json
@@ -143,12 +143,15 @@ class CustomQdrantClient:
 
         return (points, None)
 
-    def search(self, collection_name: str, query_vector: List[float], limit: int = 10, with_payload: bool = True):
+    def search(self, collection_name: str, query_vector: List[float], limit: int = 10, with_payload: bool = True, filter: Optional[Dict] = None):
         payload = {
             "vector": query_vector,
             "limit": limit,
             "with_payload": with_payload
         }
+        
+        if filter:
+            payload["filter"] = filter
 
         result = self._request("POST", f"/collections/{collection_name}/points/search", json=payload)
 

@@ -57,29 +57,37 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
         print(f"📄 Set current document: {document_filename} -> {self.current_collection_name}")
 
     def _create_vector_store_wrapper(self):
-        """Create a simple wrapper that aggregates all RAG collections"""
         print(f"🔗 Creating multi-collection vector store wrapper")
 
         class MultiCollectionQdrantWrapper:
-            def __init__(self, client, collection_manager, embeddings):
+            def __init__(self, client, collection_manager, embeddings, vector_store_manager):
                 self._client = client
                 self.collection_manager = collection_manager
                 self.embeddings = embeddings
+                self.vector_store_manager = vector_store_manager
 
             def as_retriever(self, **kwargs):
-                # For now, we'll need to handle cross-collection search later
-                # This is a placeholder that uses all collections
+                # Get current document to determine which collection to use
+                if hasattr(self.vector_store_manager, 'current_document_filename') and self.vector_store_manager.current_document_filename:
+                    collection_name = self.collection_manager.get_collection_for_document(
+                        self.vector_store_manager.current_document_filename
+                    )
+                    if self.collection_manager.collection_exists(collection_name):
+                        print(f"🎯 Using collection for current document: {collection_name}")
+                        return QdrantRetriever(self._client, collection_name, self.embeddings)
+                
+                # Fallback: use first available collection
                 all_collections = self.collection_manager.list_all_rag_collections()
                 if all_collections:
-                    # Use the first available collection for now
                     first_collection = next(iter(all_collections))
+                    print(f"📋 Using first available collection: {first_collection}")
                     return QdrantRetriever(self._client, first_collection, self.embeddings)
                 return None
 
             def add_documents(self, documents):
                 print(f"📝 Adding {len(documents)} documents via multi-collection wrapper")
 
-        wrapper = MultiCollectionQdrantWrapper(self.client, self.collection_manager, self.embeddings)
+        wrapper = MultiCollectionQdrantWrapper(self.client, self.collection_manager, self.embeddings, self)
         print(f"✅ Created multi-collection wrapper successfully")
         return wrapper
 

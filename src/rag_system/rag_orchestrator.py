@@ -73,9 +73,17 @@ class RAGOrchestrator:
 
     def _initialize_system(self) -> None:
         if self.vector_store_manager.has_documents():
-            self.qa_manager.create_qa_chain()
             available_docs = self.document_manager.get_available_documents()
             print(f"✅ Loaded existing knowledge base with {len(available_docs)} documents")
+
+            # Synchronize vector store with restored document selection FIRST
+            selected_doc = self.document_manager.get_selected_document()
+            if selected_doc and hasattr(self.vector_store_manager, 'set_current_document'):
+                self.vector_store_manager.set_current_document(selected_doc)
+                print(f"🎯 Synchronized vector store with selected document: {selected_doc}")
+
+            # Create QA chain AFTER synchronization to use correct collection
+            self.qa_manager.create_qa_chain()
 
     def process_document(self, pdf_path: str, progress_callback: Optional[Callable] = None) -> None:
         try:
@@ -111,10 +119,23 @@ class RAGOrchestrator:
 
     def set_selected_document(self, filename: str) -> None:
         self.document_manager.set_selected_document(filename)
+
+        # Synchronize vector store manager with selected document
+        if hasattr(self.vector_store_manager, 'set_current_document'):
+            self.vector_store_manager.set_current_document(filename)
+
+        # Recreate QA chain to use correct collection
         self.qa_manager.update_document_selection()
 
     def clear_selected_document(self) -> None:
         self.document_manager.clear_selected_document()
+
+        # Clear vector store manager's current document
+        if hasattr(self.vector_store_manager, 'set_current_document'):
+            self.vector_store_manager.current_document_filename = None
+            self.vector_store_manager.current_collection_name = None
+
+        # Recreate QA chain after clearing selection
         self.qa_manager.update_document_selection()
 
     @property

@@ -1,4 +1,4 @@
-# src/rag_orchestrator.py
+# src/rag_system/optimized_rag_system.py
 from typing import List, Dict, Any, Optional, Callable
 from langchain.schema import Document
 
@@ -16,7 +16,7 @@ from config import (
     VECTOR_STORE_TYPE
 )
 
-from src.rag_system.simple_rag import SimpleRAG
+from .simple_rag import SimpleRAG
 
 
 class OptimizedRAGSystem:
@@ -86,6 +86,6 @@ class OptimizedRAGSystem:
     def qa_manager(self):
         return self.rag.qa_manager
 
-    @property  
+    @property
     def document_processor(self):
         return self.rag.document_processor

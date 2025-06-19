@@ -13,7 +13,7 @@ This package contains the separated components of the RAG system:
 from .document_management import DocumentProcessor, DocumentSelector
 from .vector_store_manager import VectorStoreManager
 from .qa_manager import QAManager
-from .rag_orchestrator import OptimizedRAGSystem
+from .rag_system import OptimizedRAGSystem
 from .auth.auth_manager import AuthManager
 
 __all__ = [

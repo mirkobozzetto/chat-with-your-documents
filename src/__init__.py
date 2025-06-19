@@ -10,16 +10,13 @@ This package contains the separated components of the RAG system:
 - AuthManager: Handles authentication and user management
 """
 
-from .document_management import DocumentProcessor, DocumentSelector
 from .vector_store_manager import VectorStoreManager
 from .qa_manager import QAManager
 from .rag_system import OptimizedRAGSystem
 from .auth.auth_manager import AuthManager
 
 __all__ = [
-    'DocumentProcessor',
     'VectorStoreManager',
-    'DocumentSelector',
     'QAManager',
     'OptimizedRAGSystem',
     'AuthManager'

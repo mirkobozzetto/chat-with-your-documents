@@ -1,6 +1,5 @@
-# src/document_processor.py
+# src/document_management/document_processor.py
 import os
-import re
 import concurrent.futures
 from typing import List, Callable, Optional
 from pathlib import Path
@@ -9,6 +8,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, UnstructuredWordDocumentLoader
 from langchain.schema import Document
+
+from src.metadata import MetadataManager
 
 
 class DocumentProcessor:
@@ -19,6 +20,7 @@ class DocumentProcessor:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.max_workers = 4
+        self.metadata_manager = MetadataManager()
 
         if chunk_strategy == "semantic":
             print("📚 Using Semantic Chunking Strategy")
@@ -77,10 +79,6 @@ class DocumentProcessor:
             doc.metadata["source_filename"] = filename
             doc.metadata["document_type"] = file_ext[1:]
 
-            chapter_info = self._extract_chapter_info(doc.page_content)
-            if chapter_info:
-                doc.metadata.update(chapter_info)
-
         if progress_callback:
             progress_callback(0.5, f"Loaded {len(documents)} sections")
 
@@ -110,18 +108,11 @@ class DocumentProcessor:
             for i, chunk in enumerate(chunks):
                 chunk.metadata["source_filename"] = filename
                 chunk.metadata["document_type"] = doc_type
-
-                chapter_info = self._extract_chapter_info(chunk.page_content)
-                if chapter_info:
-                    chunk.metadata.update(chapter_info)
-                else:
-                    inherited_metadata = self._inherit_metadata_from_nearby_content(
-                        chunk.page_content, text_sections, section_metadata
-                    )
-                    if inherited_metadata:
-                        chunk.metadata.update(inherited_metadata)
-
                 chunk.metadata["chunk_index"] = i
+
+                extracted_metadata = self.metadata_manager.chapter_extractor.extract_all_metadata(chunk.page_content)
+                if extracted_metadata:
+                    chunk.metadata.update(extracted_metadata)
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 chunk_futures = []
@@ -136,10 +127,11 @@ class DocumentProcessor:
                 for future in concurrent.futures.as_completed(chunk_futures):
                     batch_chunks = future.result()
                     for i, chunk in enumerate(batch_chunks):
-                        chapter_info = self._extract_chapter_info(chunk.page_content)
-                        if chapter_info:
-                            chunk.metadata.update(chapter_info)
                         chunk.metadata["chunk_index"] = len(chunks) + i
+
+                        extracted_metadata = self.metadata_manager.chapter_extractor.extract_all_metadata(chunk.page_content)
+                        if extracted_metadata:
+                            chunk.metadata.update(extracted_metadata)
                     chunks.extend(batch_chunks)
 
         if progress_callback:
@@ -172,106 +164,3 @@ class DocumentProcessor:
         else:
             return "~5-10 minutes"
 
-    def _extract_chapter_info(self, text: str) -> Optional[dict]:
-        """Extract chapter information from text content."""
-        if not text or len(text.strip()) < 10:
-            return None
-
-        chapter_patterns = [
-            # French patterns
-            r'(?i)chapitre\s+(\d+|[ivxlc]+)(?:\s*[:\-\.]\s*(.+?))?(?=\n|\r|$)',
-            r'(?i)chapter\s+(\d+|[ivxlc]+)(?:\s*[:\-\.]\s*(.+?))?(?=\n|\r|$)',
-            # Numbered sections
-            r'^(\d+)\.(\d+)?\.?\s+(.+?)(?=\n|\r|$)',
-            # Section headers
-            r'(?i)^(section|partie)\s+(\d+|[ivxlc]+)(?:\s*[:\-\.]\s*(.+?))?(?=\n|\r|$)',
-        ]
-
-        lines = text.split('\n')[:5]  # Check first 5 lines
-
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-
-            for pattern in chapter_patterns:
-                match = re.search(pattern, line, re.MULTILINE)
-                if match:
-                    groups = match.groups()
-                    chapter_info = {}
-
-                    if 'chapitre' in pattern.lower() or 'chapter' in pattern.lower():
-                        chapter_num = groups[0] if groups and len(groups) > 0 else None
-                        if chapter_num:  # Check for None
-                            chapter_info['chapter_number'] = self._normalize_chapter_number(chapter_num)
-                        if len(groups) > 1 and groups[1]:
-                            chapter_info['chapter_title'] = groups[1].strip()
-                    elif pattern.startswith(r'^\d+'):
-                        # Section numbering like "1.2 Title"
-                        if groups and len(groups) > 0 and groups[0]:  # Check for None
-                            chapter_info['section_number'] = groups[0]
-                        if len(groups) > 1 and groups[1]:
-                            chapter_info['subsection_number'] = groups[1]
-                        if len(groups) > 2 and groups[2]:
-                            chapter_info['section_title'] = groups[2].strip()
-                    else:
-                        # Section/Partie
-                        section_num = groups[1] if len(groups) > 1 and groups[1] else (groups[0] if groups and len(groups) > 0 else None)
-                        if section_num:  # Check for None
-                            chapter_info['section_number'] = self._normalize_chapter_number(section_num)
-                        if len(groups) > 2 and groups[2]:
-                            chapter_info['section_title'] = groups[2].strip()
-
-                    # Only return if we actually found some chapter info
-                    if chapter_info:
-                        return chapter_info
-
-        return None
-
-    def _normalize_chapter_number(self, chapter_str: str) -> str:
-        """Normalize chapter numbers (convert roman to arabic if needed)."""
-        if not chapter_str:  # Check for None or empty string
-            return ""
-
-        roman_to_arabic = {
-            'i': '1', 'ii': '2', 'iii': '3', 'iv': '4', 'v': '5',
-            'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10',
-            'xi': '11', 'xii': '12', 'xiii': '13', 'xiv': '14', 'xv': '15',
-            'xvi': '16', 'xvii': '17', 'xviii': '18', 'xix': '19', 'xx': '20'
-        }
-
-        chapter_lower = chapter_str.lower().strip()
-        if chapter_lower in roman_to_arabic:
-            return roman_to_arabic[chapter_lower]
-
-        return chapter_str.strip()
-
-    def _inherit_metadata_from_nearby_content(self, chunk_text: str, original_sections: List[str], section_metadata: List[dict]) -> Optional[dict]:
-        """Try to inherit chapter metadata from nearby content in the original document."""
-        if not chunk_text or not original_sections:
-            return None
-
-        chunk_words = set(chunk_text.lower().split()[:20])  # First 20 words of chunk
-
-        best_match_score = 0
-        best_metadata = None
-
-        for section_text, metadata in zip(original_sections, section_metadata):
-            if not section_text or len(section_text.strip()) < 50:
-                continue
-
-            section_words = set(section_text.lower().split()[:50])  # First 50 words of section
-            overlap = len(chunk_words.intersection(section_words))
-
-            if overlap > best_match_score:
-                best_match_score = overlap
-                # Only inherit chapter-related metadata
-                chapter_metadata = {}
-                for key in ['chapter_number', 'chapter_title', 'section_number', 'subsection_number', 'section_title']:
-                    if key in metadata:
-                        chapter_metadata[key] = metadata[key]
-
-                if chapter_metadata:
-                    best_metadata = chapter_metadata
-
-        return best_metadata if best_match_score > 2 else None

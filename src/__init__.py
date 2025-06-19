@@ -3,11 +3,11 @@
 Modular RAG System Components
 
 This package contains the separated components of the RAG system:
-- DocumentProcessor: Handles document loading and chunking
-- VectorStoreManager: Manages ChromaDB operations
-- DocumentSelector: Handles document filtering logic
+- document_management: Module containing document processing and selection logic
+- VectorStoreManager: Manages vector database operations
 - QAManager: Manages question answering and retrieval
-- RAGOrchestrator: Coordinates all components
+- OptimizedRAGSystem: Main RAG orchestrator that coordinates all components
+- AuthManager: Handles authentication and user management
 """
 
 from .document_management import DocumentProcessor, DocumentSelector

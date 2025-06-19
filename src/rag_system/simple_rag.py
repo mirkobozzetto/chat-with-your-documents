@@ -6,7 +6,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
 from src.vector_stores import VectorStoreFactory
 from src.document_management import DocumentProcessor, DocumentSelector
-from src.qa_manager import QAManager
+from src.qa_system import QAManager
 
 
 class SimpleRAG:
@@ -55,22 +55,22 @@ class SimpleRAG:
             retrieval_fetch_k=self.config["RETRIEVAL_FETCH_K"],
             retrieval_lambda_mult=self.config["RETRIEVAL_LAMBDA_MULT"]
         )
-        
+
         # Expose retrieval settings for debug sidebar
         self.qa_manager.retrieval_k = self.config["RETRIEVAL_K"]
-        self.qa_manager.retrieval_fetch_k = self.config["RETRIEVAL_FETCH_K"] 
+        self.qa_manager.retrieval_fetch_k = self.config["RETRIEVAL_FETCH_K"]
         self.qa_manager.retrieval_lambda_mult = self.config["RETRIEVAL_LAMBDA_MULT"]
 
     def _init_system(self):
         if self.vector_store_manager.has_documents():
             available_docs = self.document_selector.get_available_documents()
-            
+
             # Set current document if one is selected
             selected_doc = self.document_selector.get_selected_document()
             if selected_doc and hasattr(self.vector_store_manager, 'set_current_document'):
                 self.vector_store_manager.set_current_document(selected_doc)
                 print(f"📄 Set current document: {selected_doc}")
-            
+
             self.qa_manager.create_qa_chain()
             print(f"✅ Loaded existing knowledge base with {len(available_docs)} documents")
 
@@ -126,11 +126,11 @@ class SimpleRAG:
 
     def set_selected_document(self, filename: str):
         self.document_selector.set_selected_document(filename)
-        
+
         # Update current document for vector store manager
         if hasattr(self.vector_store_manager, 'set_current_document'):
             self.vector_store_manager.set_current_document(filename)
-            
+
         self.qa_manager.update_document_selection()
 
     def clear_selected_document(self):

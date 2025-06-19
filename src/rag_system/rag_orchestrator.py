@@ -4,7 +4,7 @@ from pathlib import Path
 from langchain.schema import Document
 
 from src.vector_stores import VectorStoreFactory
-from src.qa_manager import QAManager
+from src.qa_system import QAManager
 from .ai_service_manager import AIServiceManager
 from .document_processor_manager import DocumentProcessorManager
 from .document_manager import DocumentManager

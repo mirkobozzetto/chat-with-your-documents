@@ -4,14 +4,15 @@ A modern RAG (Retrieval-Augmented Generation) system using OpenAI for embeddings
 
 ## Features
 
-- **Multi-format Documents**: PDF, DOCX, TXT, Markdown processing
-- **Intelligent Chunking**: Optimized document segmentation with semantic chunking
-- **Web Interface**: Modern and responsive Streamlit interface
-- **Dual Vector Stores**: Qdrant (cloud) or ChromaDB (local) support
-- **AI Agents**: 6 specialized agent types (conversational, technical, commercial, analytical, educational, creative)
+- **Multi-format Documents**: PDF, DOCX, TXT, Markdown processing with metadata extraction
+- **Advanced Chunking**: Semantic or recursive chunking with automatic chapter/section detection
+- **Intelligent Retrieval**: Context expansion with adjacent chunks and weighted scoring
+- **Dual Vector Stores**: Qdrant (cloud or self-hosted) or ChromaDB (local) with per-document collections
+- **AI Agents**: 6 specialized agent types configurable per document with custom instructions
+- **Chapter-Aware Search**: Automatic detection and filtering of chapter-specific queries
 - **Authentication**: Optional user management with session persistence
-- **Chat History**: Persistent conversations with search capabilities
-- **Source Citations**: Display of passages used for responses
+- **Chat History**: Persistent conversations with UUID-based session management
+- **Source Citations**: Detailed passage tracking with chapter and metadata references
 
 ## Installation
 

@@ -1,4 +1,4 @@
-# src/vector_store_manager.py
+# src/vector_stores/vector_store_manager.py
 import os
 from typing import List, Optional
 from langchain_chroma import Chroma

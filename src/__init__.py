@@ -10,7 +10,7 @@ This package contains the separated components of the RAG system:
 - AuthManager: Handles authentication and user management
 """
 
-from .vector_store_manager import VectorStoreManager
+from .vector_stores import VectorStoreManager
 from .qa_system import QAManager
 from .rag_system import OptimizedRAGSystem
 from .auth.auth_manager import AuthManager

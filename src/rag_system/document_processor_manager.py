@@ -1,15 +1,10 @@
 # src/rag_system/document_processor_manager.py
-import time
 from typing import List, Optional, Callable
-from pathlib import Path
 from langchain.schema import Document
 from src.document_management import DocumentProcessor
 
 
 class DocumentProcessorManager:
-    """
-    Manages document processing pipeline and coordination
-    """
 
     def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int):
         self.document_processor = DocumentProcessor(
@@ -49,3 +44,6 @@ class DocumentProcessorManager:
             "chunk_size": self.chunk_size,
             "chunk_overlap": self.chunk_overlap
         }
+
+    def get_document_processor(self) -> DocumentProcessor:
+        return self.document_processor

@@ -12,9 +12,6 @@ from .stats_manager import StatsManager
 
 
 class RAGOrchestrator:
-    """
-    Orchestrates the complete RAG system by coordinating all components
-    """
 
     def __init__(self, config: Dict[str, Any]):
         print("🚀 Initializing RAG System...")

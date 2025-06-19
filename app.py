@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 from src.ui.session_manager import SessionManager
-from src.ui.components import DocumentManagement, KnowledgeBaseStats, ChatInterface, AgentConfiguration, AuthComponent, DebugSidebar
+from src.ui.components import DocumentManagement, KnowledgeBaseStats, AgentConfiguration, AuthComponent, DebugSidebar
 from src.ui.adapters import StreamlitChatHistoryAdapter
 
 

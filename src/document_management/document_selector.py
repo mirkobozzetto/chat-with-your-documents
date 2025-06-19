@@ -1,7 +1,7 @@
 # src/document_selector.py
 from typing import List, Optional
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
-from src.document_selection_persistence import DocumentSelectionPersistence
+from .document_selection_persistence import DocumentSelectionPersistence
 
 
 class DocumentSelector:

@@ -3,7 +3,7 @@ import time
 from typing import List, Optional, Callable
 from pathlib import Path
 from langchain.schema import Document
-from src.document_processor import DocumentProcessor
+from src.document_management import DocumentProcessor
 
 
 class DocumentProcessorManager:

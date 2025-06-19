@@ -1,7 +1,7 @@
 # src/qa_system/qa_orchestrator.py
 from typing import Optional, List, Dict, Any
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
-from src.document_selector import DocumentSelector
+from src.document_management import DocumentSelector
 from src.agents import AgentManager
 from .query_enhancer import QueryEnhancer
 from .context_expander import ContextExpander

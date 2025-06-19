@@ -5,8 +5,7 @@ from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 
 from src.vector_stores import VectorStoreFactory
-from src.document_processor import DocumentProcessor
-from src.document_selector import DocumentSelector
+from src.document_management import DocumentProcessor, DocumentSelector
 from src.qa_manager import QAManager
 
 

@@ -10,9 +10,8 @@ This package contains the separated components of the RAG system:
 - RAGOrchestrator: Coordinates all components
 """
 
-from .document_processor import DocumentProcessor
+from .document_management import DocumentProcessor, DocumentSelector
 from .vector_store_manager import VectorStoreManager
-from .document_selector import DocumentSelector
 from .qa_manager import QAManager
 from .rag_orchestrator import OptimizedRAGSystem
 from .auth.auth_manager import AuthManager

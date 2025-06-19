@@ -94,7 +94,6 @@ class DocumentProcessor:
             progress_callback(0.6, "Chunking documents...")
 
         if self.chunk_strategy == "semantic":
-            # Create a mapping of text positions to metadata for semantic chunking
             text_sections = []
             section_metadata = []
 
@@ -112,19 +111,16 @@ class DocumentProcessor:
                 chunk.metadata["source_filename"] = filename
                 chunk.metadata["document_type"] = doc_type
 
-                # Extract chapter info for each chunk
                 chapter_info = self._extract_chapter_info(chunk.page_content)
                 if chapter_info:
                     chunk.metadata.update(chapter_info)
                 else:
-                    # If no chapter info found, try to inherit from nearby content
                     inherited_metadata = self._inherit_metadata_from_nearby_content(
                         chunk.page_content, text_sections, section_metadata
                     )
                     if inherited_metadata:
                         chunk.metadata.update(inherited_metadata)
 
-                # Add chunk index for better tracking
                 chunk.metadata["chunk_index"] = i
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -140,11 +136,9 @@ class DocumentProcessor:
                 for future in concurrent.futures.as_completed(chunk_futures):
                     batch_chunks = future.result()
                     for i, chunk in enumerate(batch_chunks):
-                        # Extract chapter info for each chunk
                         chapter_info = self._extract_chapter_info(chunk.page_content)
                         if chapter_info:
                             chunk.metadata.update(chapter_info)
-                        # Add global chunk index
                         chunk.metadata["chunk_index"] = len(chunks) + i
                     chunks.extend(batch_chunks)
 

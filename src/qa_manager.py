@@ -1,7 +1,7 @@
 # src/qa_manager.py
 from typing import Optional, List, Dict, Any
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
-from src.document_selector import DocumentSelector
+from src.document_management import DocumentSelector
 from src.qa_system import QAOrchestrator
 from src.agents import AgentManager
 

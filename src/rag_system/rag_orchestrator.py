@@ -42,7 +42,7 @@ class RAGOrchestrator:
             embeddings=self.ai_service_manager.get_embeddings()
         )
 
-        from src.document_selector import DocumentSelector
+        from src.document_management import DocumentSelector
         self.document_selector = DocumentSelector(
             vector_store_manager=self.vector_store_manager
         )

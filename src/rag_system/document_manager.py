@@ -2,7 +2,7 @@
 import time
 from typing import List, Optional, Dict, Any
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
-from src.document_selector import DocumentSelector
+from src.document_management import DocumentSelector
 
 
 class DocumentManager:

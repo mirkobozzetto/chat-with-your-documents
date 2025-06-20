@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import os
 
-from src.auth import AuthManager
+from src.auth.api_auth_manager import ApiAuthManager
 from src.api.models.auth_models import UserInfo
 
 security = HTTPBearer()
@@ -36,13 +36,13 @@ def verify_jwt_token(token: str) -> Optional[str]:
     except JWTError:
         return None
 
-def get_auth_manager() -> AuthManager:
+def get_auth_manager() -> ApiAuthManager:
     """Get auth manager instance"""
-    return AuthManager()
+    return ApiAuthManager()
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_manager: AuthManager = Depends(get_auth_manager)
+    auth_manager: ApiAuthManager = Depends(get_auth_manager)
 ) -> UserInfo:
     """Get current authenticated user (required)"""
     credentials_exception = HTTPException(
@@ -61,14 +61,14 @@ def get_current_user(
     if not auth_manager.is_auth_enabled():
         return UserInfo(username=username, is_authenticated=True)
 
-    if not auth_manager.is_valid_user(username):
+    if not auth_manager.user_exists(username):
         raise credentials_exception
 
     return UserInfo(username=username, is_authenticated=True)
 
 def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    auth_manager: AuthManager = Depends(get_auth_manager)
+    auth_manager: ApiAuthManager = Depends(get_auth_manager)
 ) -> Optional[UserInfo]:
     """Get current user if authenticated (optional)"""
     if not auth_manager.is_auth_enabled():
@@ -81,7 +81,7 @@ def get_optional_current_user(
     if username is None:
         return None
 
-    if not auth_manager.is_valid_user(username):
+    if not auth_manager.user_exists(username):
         return None
 
     return UserInfo(username=username, is_authenticated=True)

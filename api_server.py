@@ -9,7 +9,6 @@ from typing import Optional
 import uvicorn
 import os
 
-# API components
 from src.api.routers import (
     auth_router,
     chat_router,
@@ -21,7 +20,6 @@ from src.api.routers import (
 from src.api.dependencies import get_optional_current_user
 from src.api.models.auth_models import UserInfo
 
-# FastAPI app configuration
 app = FastAPI(
     title="RAG Assistant API",
     description="Professional REST API for Retrieval-Augmented Generation system",
@@ -31,7 +29,6 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -40,7 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Router registration
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
@@ -48,12 +44,10 @@ app.include_router(agents_router)
 app.include_router(debug_router)
 app.include_router(system_router)
 
-# Root endpoint
 @app.get("/", include_in_schema=False)
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-# Health check
 @app.get("/api/health")
 async def health_check():
     return {
@@ -62,7 +56,6 @@ async def health_check():
         "version": "1.0.0"
     }
 
-# API information
 @app.get("/api/info")
 async def api_information():
     return {
@@ -90,7 +83,6 @@ async def api_information():
         ]
     }
 
-# User quota endpoint
 @app.get("/api/quota")
 async def get_user_quota_info(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
@@ -112,7 +104,6 @@ async def get_user_quota_info(
             }
         }
     except ImportError:
-        # Fallback if quota system not available
         return {
             "user_id": current_user.username if current_user else "anonymous",
             "usage": {"requests_today": 0, "tokens_today": 0},
@@ -124,7 +115,6 @@ async def get_user_quota_info(
         }
 
 if __name__ == "__main__":
-    # Server configuration
     host = os.getenv("API_HOST", "0.0.0.0")
     port = int(os.getenv("API_PORT", "8000"))
     reload = os.getenv("API_RELOAD", "true").lower() == "true"

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from src.api.models.auth_models import LoginRequest, TokenResponse, AuthStatusResponse, UserInfo
 from src.api.dependencies.authentication import get_auth_manager, create_jwt_token, get_optional_current_user
-from src.auth import AuthManager
+from src.auth.api_auth_manager import ApiAuthManager
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -15,7 +15,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 @router.post("/login", response_model=TokenResponse)
 async def login(
     request: LoginRequest,
-    auth_manager: AuthManager = Depends(get_auth_manager)
+    auth_manager: ApiAuthManager = Depends(get_auth_manager)
 ):
     if not auth_manager.is_auth_enabled():
         raise HTTPException(
@@ -46,7 +46,7 @@ async def login(
 @router.get("/status", response_model=AuthStatusResponse)
 async def get_auth_status(
     current_user: UserInfo = Depends(get_optional_current_user),
-    auth_manager: AuthManager = Depends(get_auth_manager)
+    auth_manager: ApiAuthManager = Depends(get_auth_manager)
 ):
     auth_required = auth_manager.is_auth_enabled()
 

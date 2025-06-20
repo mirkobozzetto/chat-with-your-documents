@@ -79,6 +79,9 @@ class AuthManager:
     def get_authenticated_users(self) -> Set[str]:
         return self.config.get_user_list()
 
+    def user_exists(self, username: str) -> bool:
+        return self.config.user_exists(username)
+
     def refresh_session(self) -> None:
         if self.is_user_authenticated():
             st.session_state.auth_timestamp = datetime.now()

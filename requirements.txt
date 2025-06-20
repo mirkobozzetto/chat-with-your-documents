@@ -34,3 +34,9 @@ bcrypt>=4.0.0
 python-dotenv>=1.0.0
 tiktoken>=0.6.0
 numpy>=1.24.0
+
+# FastAPI for API mode
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+python-jose[cryptography]>=3.3.0

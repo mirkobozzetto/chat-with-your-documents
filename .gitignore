@@ -127,3 +127,5 @@ auth_sessions.json
 auth_sessions.json
 
 SUMMARY.md
+CLAUDE.md
+.cursor/

@@ -13,6 +13,7 @@ A modern RAG (Retrieval-Augmented Generation) system using OpenAI for embeddings
 - **Authentication**: Optional user management with session persistence
 - **Chat History**: Persistent conversations with UUID-based session management
 - **Source Citations**: Detailed passage tracking with chapter and metadata references
+- **REST API**: Complete FastAPI service with Swagger documentation for external integration
 
 ## Installation
 
@@ -22,10 +23,20 @@ A modern RAG (Retrieval-Augmented Generation) system using OpenAI for embeddings
 pip install -r requirements.txt
 ```
 
-## Usage
+## Streamlit App
 
 ```bash
 streamlit run app.py
+```
+
+### API Server
+
+```bash
+# Linux/macOS
+python3 api_server.py
+
+# Windows
+python api_server.py
 ```
 
 ### Command Line

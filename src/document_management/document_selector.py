@@ -1,4 +1,4 @@
-# src/document_selector.py
+# src/document_management/document_selector.py
 from typing import List, Optional
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
 from .document_selection_persistence import DocumentSelectionPersistence

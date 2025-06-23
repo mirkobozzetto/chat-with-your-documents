@@ -31,9 +31,10 @@ class AdvancedControls:
 
         chunk_strategy = st.selectbox(
             "Chunking Strategy",
-            options=["semantic", "recursive"],
-            index=0 if current_strategy == "semantic" else 1,
-            key="chunk_strategy_select"
+            options=["semantic", "recursive", "agentic_basic", "agentic_context", "agentic_adaptive", "hybrid_agentic"],
+            index=self._get_strategy_index(current_strategy),
+            key="chunk_strategy_select",
+            help="semantic: embedding-based | recursive: rule-based | agentic_basic: LLM-guided | agentic_context: document-aware | agentic_adaptive: learning-enabled | hybrid_agentic: best of both"
         )
 
         if chunk_strategy == "semantic":
@@ -44,6 +45,16 @@ class AdvancedControls:
                 value=95,
                 step=1,
                 key="semantic_threshold"
+            )
+        elif chunk_strategy.startswith("agentic"):
+            threshold = st.slider(
+                "LLM Confidence Threshold",
+                min_value=0.6,
+                max_value=0.9,
+                value=0.7,
+                step=0.05,
+                key="agentic_confidence_threshold",
+                help="Higher values = more conservative chunking boundaries"
             )
         else:
             threshold = None
@@ -253,3 +264,10 @@ class AdvancedControls:
             }
         }
         return presets.get(preset_name, presets["Default"])
+
+    def _get_strategy_index(self, current_strategy: str) -> int:
+        strategies = ["semantic", "recursive", "agentic_basic", "agentic_context", "agentic_adaptive", "hybrid_agentic"]
+        try:
+            return strategies.index(current_strategy)
+        except ValueError:
+            return 0

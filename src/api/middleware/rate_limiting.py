@@ -3,7 +3,6 @@
 from fastapi import Request
 from typing import Dict
 from datetime import datetime, timedelta
-import os
 
 class SimpleRateLimiter:
     """Simple in-memory rate limiter for development"""

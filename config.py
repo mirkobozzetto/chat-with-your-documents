@@ -16,6 +16,10 @@ CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1500"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "300"))
 CHUNK_STRATEGY = os.getenv("CHUNK_STRATEGY", "semantic")
 
+AGENTIC_CHUNKING_ENABLED = os.getenv("AGENTIC_CHUNKING_ENABLED", "false").lower() == "true"
+AGENTIC_LLM_MODEL = os.getenv("AGENTIC_LLM_MODEL", "gpt-4.1-2025-04-14")
+AGENTIC_STRATEGY = os.getenv("AGENTIC_STRATEGY", "agentic_basic")
+
 CHAT_TEMPERATURE = float(os.getenv("CHAT_TEMPERATURE", "0.1"))
 RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "6"))
 RETRIEVAL_FETCH_K = int(os.getenv("RETRIEVAL_FETCH_K", "25"))

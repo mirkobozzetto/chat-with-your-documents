@@ -7,10 +7,10 @@ from .qdrant_search_engine import QdrantSearchEngine
 
 class QdrantRetriever(BaseRetriever):
     """Custom retriever for Qdrant with weighted scoring and MMR filtering"""
-    
+
     # Declare Pydantic fields to avoid validation errors
     client: Any = Field(default=None, exclude=True)
-    collection_name: str = Field(default="", exclude=True) 
+    collection_name: str = Field(default="", exclude=True)
     embeddings: Any = Field(default=None, exclude=True)
     search_engine: QdrantSearchEngine = Field(default_factory=QdrantSearchEngine, exclude=True)
 
@@ -87,9 +87,20 @@ class QdrantRetriever(BaseRetriever):
         documents = []
         for result in weighted_results:
             if result.payload:
+                page_content = result.payload.get('page_content', '') or ''
+                metadata = result.payload.get('metadata', {}) or {}
+
+                # Ensure page_content is a string
+                if not isinstance(page_content, str):
+                    page_content = str(page_content) if page_content else ''
+
+                # Ensure metadata is a dict
+                if not isinstance(metadata, dict):
+                    metadata = {}
+
                 doc = Document(
-                    page_content=result.payload.get('page_content', ''),
-                    metadata=result.payload.get('metadata', {})
+                    page_content=page_content,
+                    metadata=metadata
                 )
                 # Store the weighted score in metadata for debugging
                 doc.metadata['_weighted_score'] = getattr(result, 'weighted_score', result.score)

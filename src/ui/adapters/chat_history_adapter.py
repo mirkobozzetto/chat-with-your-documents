@@ -27,14 +27,14 @@ class StreamlitChatHistoryAdapter:
         current_session = self.session_manager.get_current_session()
         if current_session:
             st.session_state.messages = [
-                {"role": msg.role, "content": msg.content}
+                {"role": msg.role, "content": msg.content, **msg.metadata}
                 for msg in current_session.messages
             ]
 
     def _on_session_change(self, conversation: Optional[Conversation]) -> None:
         if conversation:
             st.session_state.messages = [
-                {"role": msg.role, "content": msg.content}
+                {"role": msg.role, "content": msg.content, **msg.metadata}
                 for msg in conversation.messages
             ]
         else:
@@ -59,7 +59,7 @@ class StreamlitChatHistoryAdapter:
         conversation = self.session_manager.load_session(session_id)
         if conversation:
             st.session_state.messages = [
-                {"role": msg.role, "content": msg.content}
+                {"role": msg.role, "content": msg.content, **msg.metadata}
                 for msg in conversation.messages
             ]
             return True

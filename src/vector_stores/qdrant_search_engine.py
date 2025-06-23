@@ -11,24 +11,37 @@ class QdrantSearchEngine:
 
     def apply_weighted_scoring(self, results: List[Any], query: str, search_kwargs: Dict[str, Any]) -> List[Any]:
         """Apply metadata-based weighted scoring to search results"""
-        query_context = self.context_extractor.extract_context(query)
-        weighted_results = []
+        try:
+            query_context = self.context_extractor.extract_context(query)
+            weighted_results = []
 
-        for result in results:
-            metadata = result.payload.get('metadata', {}) if result.payload else {}
-            weighted_score = self._calculate_weighted_score(
-                result.score, metadata, query_context, search_kwargs
-            )
+            for result in results:
+                try:
+                    metadata = result.payload.get('metadata', {}) if result.payload else {}
+                    if not isinstance(metadata, dict):
+                        metadata = {}
 
-            # Create a new result object with weighted score
-            result.weighted_score = weighted_score
-            weighted_results.append(result)
+                    weighted_score = self._calculate_weighted_score(
+                        result.score, metadata, query_context, search_kwargs
+                    )
 
-        # Sort by weighted score (higher is better)
-        weighted_results.sort(key=lambda x: x.weighted_score, reverse=True)
-        print(f"⚖️ Applied weighted scoring to {len(weighted_results)} results")
+                    # Create a new result object with weighted score
+                    result.weighted_score = weighted_score
+                    weighted_results.append(result)
+                except Exception as e:
+                    print(f"⚠️ Error processing result: {e}")
+                    # Keep original score if weighting fails
+                    result.weighted_score = result.score
+                    weighted_results.append(result)
 
-        return weighted_results
+            # Sort by weighted score (higher is better)
+            weighted_results.sort(key=lambda x: getattr(x, 'weighted_score', x.score), reverse=True)
+            print(f"⚖️ Applied weighted scoring to {len(weighted_results)} results")
+
+            return weighted_results
+        except Exception as e:
+            print(f"⚠️ Weighted scoring failed: {e}")
+            return results
 
     def _calculate_weighted_score(self, base_score: float, metadata: Dict[str, Any],
                                  query_context: Dict[str, Any], search_kwargs: Dict[str, Any]) -> float:
@@ -88,11 +101,13 @@ class QdrantSearchEngine:
 
     def _apply_document_type_boost(self, metadata: Dict[str, Any]) -> float:
         """Apply document type preferences"""
-        doc_type = metadata.get('document_type', '').lower()
-        if doc_type == 'pdf':
-            return 1.2  # PDFs often more authoritative
-        elif doc_type in ['docx', 'doc']:
-            return 1.1  # Word docs slightly preferred over plain text
+        doc_type = metadata.get('document_type', '') or ''
+        if isinstance(doc_type, str):
+            doc_type = doc_type.lower()
+            if doc_type == 'pdf':
+                return 1.2  # PDFs often more authoritative
+            elif doc_type in ['docx', 'doc']:
+                return 1.1  # Word docs slightly preferred over plain text
         return 1.0
 
     def _apply_positional_boost(self, metadata: Dict[str, Any], query_context: Dict[str, Any]) -> float:
@@ -112,19 +127,23 @@ class QdrantSearchEngine:
 
         if query_type == 'definition' and chunk_index < 10:
             return 1.2  # Definitions often in early content
-        elif query_type == 'example' and metadata.get('section_title', '').lower().find('exemple') != -1:
-            return 1.3  # Boost sections with "exemple" in title
+        elif query_type == 'example':
+            section_title = metadata.get('section_title', '') or ''
+            if isinstance(section_title, str) and section_title.lower().find('exemple') != -1:
+                return 1.3  # Boost sections with "exemple" in title
         return 1.0
 
     def _apply_chapter_title_boost(self, metadata: Dict[str, Any], query_context: Dict[str, Any]) -> float:
         """Apply chapter title relevance boost"""
-        chapter_title = metadata.get('chapter_title', '').lower()
-        if chapter_title and query_context.get('preferred_chapter'):
-            # Basic keyword matching in chapter titles
-            query_words = set(query_context.get('query_keywords', []))
-            title_words = set(chapter_title.split())
-            if query_words.intersection(title_words):
-                return 1.1
+        chapter_title = metadata.get('chapter_title', '') or ''
+        if isinstance(chapter_title, str) and chapter_title:
+            chapter_title = chapter_title.lower()
+            if query_context.get('preferred_chapter'):
+                # Basic keyword matching in chapter titles
+                query_words = set(query_context.get('query_keywords', []))
+                title_words = set(chapter_title.split())
+                if query_words.intersection(title_words):
+                    return 1.1
         return 1.0
 
     def _apply_custom_weights(self, metadata: Dict[str, Any], search_kwargs: Dict[str, Any]) -> float:

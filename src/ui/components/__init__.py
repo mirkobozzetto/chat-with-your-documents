@@ -8,6 +8,7 @@ Contains specialized UI components:
 - ChatInterface: Conversation management
 - AgentConfiguration: Agent configuration and management
 - AuthComponent: Authentication interface
+- AdvancedControls: Advanced RAG configuration and tuning
 """
 
 from .document_management import DocumentManagement
@@ -15,7 +16,6 @@ from .knowledge_base_stats import KnowledgeBaseStats
 from .chat_interface import ChatInterface
 from .agent_configuration import AgentConfiguration
 from .auth_component import AuthComponent
-from .debug_sidebar import DebugSidebar
 from .advanced_controls import AdvancedControls
 
 __all__ = [
@@ -24,6 +24,5 @@ __all__ = [
     'ChatInterface',
     'AgentConfiguration',
     'AuthComponent',
-    'DebugSidebar',
     'AdvancedControls'
 ]

@@ -110,9 +110,14 @@ class DocumentProcessor:
                 chunk.metadata["document_type"] = doc_type
                 chunk.metadata["chunk_index"] = i
 
+                # Extract all metadata including chapters and sections
                 extracted_metadata = self.metadata_manager.chapter_extractor.extract_all_metadata(chunk.page_content)
                 if extracted_metadata:
                     chunk.metadata.update(extracted_metadata)
+
+                # Also extract word count and content length
+                chunk.metadata['word_count'] = len(chunk.page_content.split())
+                chunk.metadata['content_length'] = len(chunk.page_content)
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 chunk_futures = []
@@ -129,9 +134,14 @@ class DocumentProcessor:
                     for i, chunk in enumerate(batch_chunks):
                         chunk.metadata["chunk_index"] = len(chunks) + i
 
+                        # Extract all metadata including chapters and sections
                         extracted_metadata = self.metadata_manager.chapter_extractor.extract_all_metadata(chunk.page_content)
                         if extracted_metadata:
                             chunk.metadata.update(extracted_metadata)
+
+                        # Also extract word count and content length
+                        chunk.metadata['word_count'] = len(chunk.page_content.split())
+                        chunk.metadata['content_length'] = len(chunk.page_content)
                     chunks.extend(batch_chunks)
 
         if progress_callback:

@@ -1,6 +1,6 @@
 # ui/components/document_management.py
 import streamlit as st
-from rag_system import OptimizedRAGSystem as RAGSystem
+from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
 from src.ui.file_handler import FileHandler
 
 

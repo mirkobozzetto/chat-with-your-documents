@@ -3,7 +3,7 @@ import os
 import time
 import streamlit as st
 from typing import Optional
-from rag_system import OptimizedRAGSystem as RAGSystem
+from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
 
 
 class FileHandler:

@@ -1,7 +1,7 @@
 # src/ui/session_manager.py
 import streamlit as st
 import os
-from rag_system import OptimizedRAGSystem as RAGSystem
+from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
 from src.auth import AuthManager
 
 
@@ -31,32 +31,41 @@ class SessionManager:
 
     @staticmethod
     def initialize_rag_system() -> RAGSystem:
-        """Initialize RAG system with caching"""
         if 'rag_system' not in st.session_state:
             with st.spinner("Initializing RAG system..."):
-                st.session_state.rag_system = RAGSystem()
+                import config
+                rag_config = {
+                    "OPENAI_API_KEY": config.OPENAI_API_KEY,
+                    "EMBEDDING_MODEL": config.EMBEDDING_MODEL,
+                    "CHAT_MODEL": config.CHAT_MODEL,
+                    "CHUNK_SIZE": config.CHUNK_SIZE,
+                    "CHUNK_OVERLAP": config.CHUNK_OVERLAP,
+                    "CHUNK_STRATEGY": config.CHUNK_STRATEGY,
+                    "CHAT_TEMPERATURE": config.CHAT_TEMPERATURE,
+                    "RETRIEVAL_K": config.RETRIEVAL_K,
+                    "RETRIEVAL_FETCH_K": config.RETRIEVAL_FETCH_K,
+                    "RETRIEVAL_LAMBDA_MULT": config.RETRIEVAL_LAMBDA_MULT,
+                    "VECTOR_STORE_TYPE": config.VECTOR_STORE_TYPE
+                }
+                st.session_state.rag_system = RAGSystem(rag_config)
         return st.session_state.rag_system
 
     @staticmethod
     def initialize_chat_history() -> list:
-        """Initialize chat history if not exists"""
         if "messages" not in st.session_state:
             st.session_state.messages = []
         return st.session_state.messages
 
     @staticmethod
     def clear_chat_history() -> None:
-        """Clear chat history and rerun"""
         st.session_state.messages = []
         st.rerun()
 
     @staticmethod
     def get_rag_system() -> RAGSystem:
-        """Get current RAG system instance"""
         return st.session_state.rag_system
 
     def get_session_info(self) -> dict:
-        """Get complete session information"""
         auth_info = self.auth_manager.get_session_info()
 
         session_info = {
@@ -75,9 +84,7 @@ class SessionManager:
         return session_info
 
     def logout(self) -> None:
-        """Logout user and clear session"""
         self.auth_manager.logout_user()
-        # Clear RAG system and other session data
         for key in ['rag_system', 'messages']:
             if key in st.session_state:
                 del st.session_state[key]

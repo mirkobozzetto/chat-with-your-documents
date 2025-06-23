@@ -5,7 +5,7 @@ Usage: python cli.py <document_path>
 
 import sys
 import os
-from rag_system import OptimizedRAGSystem
+from src.rag_system.rag_orchestrator import RAGOrchestrator
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
         sys.exit(1)
 
     print("Initializing RAG system...")
-    rag = OptimizedRAGSystem()
+    rag = RAGOrchestrator()
 
     print(f"Processing document: {document_path}")
     rag.process_pdf(document_path)

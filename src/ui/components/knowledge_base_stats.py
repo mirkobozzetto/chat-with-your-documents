@@ -1,10 +1,9 @@
 # ui/components/knowledge_base_stats.py
 import streamlit as st
-from rag_system import OptimizedRAGSystem as RAGSystem
+from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
 
 
 class KnowledgeBaseStats:
-
     @staticmethod
     def render_stats_section(rag_system: RAGSystem) -> None:
         st.subheader("📊 Knowledge Base Stats")
@@ -69,7 +68,6 @@ class KnowledgeBaseStats:
                             st.session_state[f"confirm_delete_{doc}"] = True
                             st.rerun()
 
-                    # Show detailed info if requested
                     if st.session_state.get(f"show_info_{doc}", False) and doc_info:
                         with st.expander(f"Details for {doc}", expanded=True):
                             st.json(doc_info)
@@ -89,11 +87,9 @@ class KnowledgeBaseStats:
 
     @staticmethod
     def _handle_document_deletion(rag_system: RAGSystem) -> None:
-        """Handle document deletion confirmations and actions"""
         available_docs = rag_system.get_available_documents()
 
         for doc in available_docs:
-            # Check if user requested deletion
             if st.session_state.get(f"confirm_delete_{doc}", False):
                 st.warning(f"⚠️ Delete document '{doc}'?")
 
@@ -106,7 +102,6 @@ class KnowledgeBaseStats:
 
                         if success:
                             st.success(f"Document '{doc}' deleted successfully!")
-                            # Clear confirmation state
                             del st.session_state[f"confirm_delete_{doc}"]
                             st.rerun()
                         else:
@@ -115,6 +110,5 @@ class KnowledgeBaseStats:
 
                 with col2:
                     if st.button("❌ Cancel", key=f"confirm_no_{doc}"):
-                        # Clear confirmation state
                         del st.session_state[f"confirm_delete_{doc}"]
                         st.rerun()

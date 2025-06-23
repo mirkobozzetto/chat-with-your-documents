@@ -19,6 +19,19 @@ class ConfigService:
             rag_system.document_processor_manager.chunk_size = config["chunk_size"]
             rag_system.document_processor_manager.chunk_overlap = config["chunk_overlap"]
 
+        if config.get("enable_contextual_rag"):
+            rag_system.enable_contextual_rag = True
+            if hasattr(rag_system, 'hybrid_search_engine') and rag_system.hybrid_search_engine:
+                rag_system.hybrid_search_engine.set_weights(
+                    config.get("dense_weight", 0.6),
+                    config.get("sparse_weight", 0.4)
+                )
+            if hasattr(rag_system, 'reranker') and hasattr(rag_system.reranker, 'set_weights'):
+                rag_system.reranker.set_weights(
+                    config.get("relevance_weight", 0.7),
+                    config.get("original_weight", 0.3)
+                )
+
     def apply_retrieval_config(self, rag_system: RAGOrchestrator, config: Dict[str, Any]) -> None:
         rag_system.qa_manager.retrieval_k = config["retrieval_k"]
         rag_system.qa_manager.retrieval_fetch_k = config["fetch_k"]

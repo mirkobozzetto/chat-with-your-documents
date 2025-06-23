@@ -1,7 +1,8 @@
 # src/qa_system/qa_chain_builder.py
-from typing import Optional, Dict, Any
+from typing import Dict, Any, List
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
+from langchain_core.documents import Document
 from src.vector_stores.base_vector_store import BaseVectorStoreManager
 from src.document_management import DocumentSelector
 
@@ -148,3 +149,37 @@ Answer:"""
     def set_custom_prompt_template(self, template: str) -> None:
         """Set a custom prompt template"""
         self.default_prompt_template = template
+
+    def build_qa_chain_with_documents(self, documents: List[Document]) -> Any:
+        """Build QA chain using specific documents for contextual RAG"""
+        from langchain.chains.question_answering import load_qa_chain
+
+        prompt = PromptTemplate(
+            template=self.default_prompt_template,
+            input_variables=["context", "question"]
+        )
+
+        qa_chain = load_qa_chain(
+            llm=self.llm,
+            chain_type="stuff",
+            prompt=prompt
+        )
+
+        class DocumentBasedChain:
+            def __init__(self, qa_chain, documents):
+                self.qa_chain = qa_chain
+                self.documents = documents
+
+            def invoke(self, inputs):
+                question = inputs.get("query", "")
+                result = self.qa_chain({
+                    "input_documents": self.documents,
+                    "question": question
+                })
+
+                return {
+                    "result": result["output_text"],
+                    "source_documents": self.documents
+                }
+
+        return DocumentBasedChain(qa_chain, documents)

@@ -37,3 +37,6 @@ class QAManager:
 
     def sync_agents_with_documents(self, available_documents: List[str]) -> None:
         self.qa_orchestrator.sync_agents_with_documents(available_documents)
+
+    def ask_question_with_documents(self, question: str, documents: List[Any], chat_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
+        return self.qa_orchestrator.ask_question_with_documents(question, documents, chat_history)

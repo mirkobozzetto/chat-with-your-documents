@@ -29,6 +29,16 @@ VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "chroma")
 
 CHROMA_PERSIST_DIRECTORY = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
 
+ENABLE_CONTEXTUAL_RAG = os.getenv("ENABLE_CONTEXTUAL_RAG", "false").lower() == "true"
+DENSE_WEIGHT = float(os.getenv("DENSE_WEIGHT", "0.6"))
+SPARSE_WEIGHT = float(os.getenv("SPARSE_WEIGHT", "0.4"))
+RRF_K = int(os.getenv("RRF_K", "60"))
+USE_NEURAL_RERANKER = os.getenv("USE_NEURAL_RERANKER", "true").lower() == "true"
+RELEVANCE_WEIGHT = float(os.getenv("RELEVANCE_WEIGHT", "0.7"))
+ORIGINAL_WEIGHT = float(os.getenv("ORIGINAL_WEIGHT", "0.3"))
+CONTEXTUAL_RETRIEVAL_K = int(os.getenv("CONTEXTUAL_RETRIEVAL_K", "20"))
+FINAL_RETRIEVAL_K = int(os.getenv("FINAL_RETRIEVAL_K", "5"))
+
 QDRANT_URL = os.getenv("QDRANT_URL", "https://qdrant.mirko.re")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "rag_documents")

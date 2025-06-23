@@ -37,6 +37,53 @@ class AdvancedControls:
             help="semantic: embedding-based | recursive: rule-based | agentic_basic: LLM-guided | agentic_context: document-aware | agentic_adaptive: learning-enabled | hybrid_agentic: best of both"
         )
 
+        st.divider()
+        st.subheader("🧠 Contextual RAG Settings")
+
+        enable_contextual = st.checkbox(
+            "Enable Contextual RAG",
+            value=getattr(rag_system, 'enable_contextual_rag', False),
+            key="enable_contextual_rag",
+            help="Use Anthropic's Contextual RAG approach for better retrieval accuracy"
+        )
+
+        if enable_contextual:
+            col1, col2 = st.columns(2)
+            with col1:
+                dense_weight = st.slider(
+                    "Dense Search Weight",
+                    min_value=0.1,
+                    max_value=0.9,
+                    value=0.6,
+                    step=0.1,
+                    key="dense_weight"
+                )
+
+                use_neural_reranker = st.checkbox(
+                    "Neural Reranking",
+                    value=True,
+                    key="use_neural_reranker"
+                )
+
+            with col2:
+                sparse_weight = st.slider(
+                    "Sparse Search Weight",
+                    min_value=0.1,
+                    max_value=0.9,
+                    value=1.0 - dense_weight,
+                    step=0.1,
+                    key="sparse_weight",
+                    disabled=True
+                )
+
+                retrieval_k = st.number_input(
+                    "Final Retrieval K",
+                    min_value=3,
+                    max_value=15,
+                    value=5,
+                    key="final_retrieval_k"
+                )
+
         if chunk_strategy == "semantic":
             threshold = st.slider(
                 "Semantic Threshold",
@@ -59,11 +106,22 @@ class AdvancedControls:
         else:
             threshold = None
 
+        contextual_params = {}
+        if enable_contextual:
+            contextual_params = {
+                "enable_contextual_rag": enable_contextual,
+                "dense_weight": dense_weight,
+                "sparse_weight": sparse_weight,
+                "use_neural_reranker": use_neural_reranker,
+                "final_retrieval_k": retrieval_k
+            }
+
         return {
             "chunk_size": chunk_size,
             "chunk_overlap": chunk_overlap,
             "chunk_strategy": chunk_strategy,
-            "semantic_threshold": threshold
+            "semantic_threshold": threshold,
+            **contextual_params
         }
 
     def render_retrieval_controls(self, rag_system) -> Dict[str, Any]:

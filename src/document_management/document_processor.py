@@ -8,19 +8,25 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, UnstructuredWordDocumentLoader
 from langchain.schema import Document
+from langchain_core.language_models import BaseLanguageModel
 
 from src.metadata import MetadataManager
 
 
 class DocumentProcessor:
 
-    def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int):
+    def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int, llm: Optional[BaseLanguageModel] = None, enable_contextual: bool = False):
         self.embeddings = embeddings
         self.chunk_strategy = chunk_strategy
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.max_workers = 4
         self.metadata_manager = MetadataManager()
+        self.enable_contextual = enable_contextual
+        self.contextual_preprocessor = None
+        if llm and enable_contextual:
+            from src.rag_system.contextual_preprocessor import ContextualPreprocessor
+            self.contextual_preprocessor = ContextualPreprocessor(llm)
 
         if chunk_strategy == "semantic":
             print("📚 Using Semantic Chunking Strategy")
@@ -156,6 +162,14 @@ class DocumentProcessor:
 
         documents = self.load_document(file_path, progress_callback)
         chunks = self.chunk_documents(documents, progress_callback)
+
+        if self.enable_contextual and self.contextual_preprocessor:
+            if progress_callback:
+                progress_callback(0.85, "Applying contextual preprocessing...")
+
+            full_document_content = "\n\n".join([doc.page_content for doc in documents])
+            contextual_chunks = self.contextual_preprocessor.process_chunks(chunks, full_document_content)
+            chunks = self.contextual_preprocessor.create_enhanced_documents(contextual_chunks)
 
         if progress_callback:
             progress_callback(0.9, "Processing complete!")

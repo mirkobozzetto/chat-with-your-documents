@@ -25,6 +25,15 @@ def get_rag_configuration() -> Dict[str, Any]:
         "RETRIEVAL_FETCH_K": config.RETRIEVAL_FETCH_K,
         "RETRIEVAL_LAMBDA_MULT": config.RETRIEVAL_LAMBDA_MULT,
         "VECTOR_STORE_TYPE": config.VECTOR_STORE_TYPE,
+        "ENABLE_CONTEXTUAL_RAG": config.ENABLE_CONTEXTUAL_RAG,
+        "DENSE_WEIGHT": config.DENSE_WEIGHT,
+        "SPARSE_WEIGHT": config.SPARSE_WEIGHT,
+        "RRF_K": config.RRF_K,
+        "USE_NEURAL_RERANKER": config.USE_NEURAL_RERANKER,
+        "RELEVANCE_WEIGHT": config.RELEVANCE_WEIGHT,
+        "ORIGINAL_WEIGHT": config.ORIGINAL_WEIGHT,
+        "CONTEXTUAL_RETRIEVAL_K": config.CONTEXTUAL_RETRIEVAL_K,
+        "FINAL_RETRIEVAL_K": config.FINAL_RETRIEVAL_K,
     }
 
 def get_user_rag_system(

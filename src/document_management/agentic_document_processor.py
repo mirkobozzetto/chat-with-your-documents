@@ -1,6 +1,7 @@
 # src/document_management/agentic_document_processor.py
 from typing import List, Dict, Any, Optional
 from langchain.schema import Document
+from langchain_core.language_models import BaseLanguageModel
 import concurrent.futures
 from .agentic_chunker import AgenticChunker, ContextAwareChunker, AdaptiveAgenticChunker
 from .document_processor import DocumentProcessor
@@ -8,12 +9,11 @@ from .document_processor import DocumentProcessor
 class AgenticDocumentProcessor(DocumentProcessor):
 
     def __init__(self, embeddings, chunk_size: int = 2000, chunk_overlap: int = 200,
-                 chunk_strategy: str = "agentic_basic", max_workers: int = 4):
+                 chunk_strategy: str = "agentic_basic", max_workers: int = 4,
+                 llm: Optional[BaseLanguageModel] = None, enable_contextual: bool = False):
 
-        self.embeddings = embeddings
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-        self.chunk_strategy = chunk_strategy
+        super().__init__(embeddings, chunk_strategy, chunk_size, chunk_overlap, 
+                        llm, enable_contextual)
         self.max_workers = max_workers
 
         self._initialize_agentic_chunkers()

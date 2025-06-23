@@ -1,28 +1,35 @@
 # src/rag_system/document_processor_manager.py
 from typing import List, Optional, Callable
 from langchain.schema import Document
-from src.document_management import DocumentProcessor
-from src.document_management.agentic_document_processor import AgenticDocumentProcessor
+from langchain_core.language_models import BaseLanguageModel
 
 
 class DocumentProcessorManager:
 
-    def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int):
+    def __init__(self, embeddings, chunk_strategy: str, chunk_size: int, chunk_overlap: int, llm: Optional[BaseLanguageModel] = None, enable_contextual: bool = False):
         if chunk_strategy.startswith("agentic") or chunk_strategy == "hybrid_agentic":
             print(f"🤖 Initializing Agentic Document Processor with strategy: {chunk_strategy}")
+            if enable_contextual:
+                print("🧠 Contextual RAG enabled with Agentic chunking")
+            from src.document_management.agentic_document_processor import AgenticDocumentProcessor
             self.document_processor = AgenticDocumentProcessor(
                 embeddings=embeddings,
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 chunk_strategy=chunk_strategy,
-                max_workers=4
+                max_workers=4,
+                llm=llm,
+                enable_contextual=enable_contextual
             )
         else:
+            from src.document_management.document_processor import DocumentProcessor
             self.document_processor = DocumentProcessor(
                 embeddings=embeddings,
                 chunk_strategy=chunk_strategy,
                 chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
+                chunk_overlap=chunk_overlap,
+                llm=llm,
+                enable_contextual=enable_contextual
             )
 
         self.chunk_strategy = chunk_strategy
@@ -58,5 +65,5 @@ class DocumentProcessorManager:
             "chunk_overlap": self.chunk_overlap
         }
 
-    def get_document_processor(self) -> DocumentProcessor:
+    def get_document_processor(self):
         return self.document_processor

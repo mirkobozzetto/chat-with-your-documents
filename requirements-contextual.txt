@@ -1,0 +1,2 @@
+# requirements-contextual.txt
+rank-bm25==0.2.2

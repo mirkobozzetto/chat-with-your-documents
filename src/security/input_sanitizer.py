@@ -290,7 +290,7 @@ _global_sanitizer = InputSanitizer()
 
 
 def sanitize_user_input(
-    input_value: Union[str, Dict, List],
+    input_value: Union[str, Dict, List, Any],
     input_type: str = "general",
     max_length: Optional[int] = None
 ) -> Any:
@@ -308,5 +308,4 @@ def sanitize_user_input(
     elif isinstance(input_value, list):
         return [_global_sanitizer.sanitize_string(str(item)) for item in input_value]
 
-    else:
-        return _global_sanitizer.sanitize_string(str(input_value), max_length=max_length)
+    return _global_sanitizer.sanitize_string(str(input_value), max_length=max_length)

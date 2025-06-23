@@ -35,35 +35,91 @@ class MainView:
             auth_component.render_auth_status()
 
     def render_main_content(self, rag_system: RAGOrchestrator, chat_history: StreamlitChatHistoryAdapter) -> None:
-        self._display_conversation_history(chat_history)
+        agent_manager = rag_system.qa_manager.get_agent_manager()
+        AgentConfiguration.render_agents_overview(agent_manager)
+
+        chat_history.render_conversation_management()
+
+        st.header("💬 Ask Questions")
+
+        self._update_conversation_context(rag_system, chat_history)
+
+        messages = st.session_state.messages
+        for message in messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+                if message["role"] == "assistant":
+                    self._display_assistant_message_extras(message)
 
     def _render_advanced_settings(self, rag_system: RAGOrchestrator) -> None:
-        advanced_controls = AdvancedControls(self.config_service)
-        advanced_controls.render_advanced_settings(rag_system)
+        if st.checkbox("🔧 Advanced Settings", key="advanced_settings_toggle"):
+            st.warning("⚠️ Configure before uploading documents. Changes apply to new uploads only.")
+            advanced_controls = AdvancedControls()
+
+            with st.expander("⚙️ Chunking", expanded=False):
+                chunking_params = advanced_controls.render_chunking_controls(rag_system)
+                if st.button("Apply Chunking Settings", key="apply_chunking"):
+                    self.config_service.apply_chunking_config(rag_system, chunking_params)
+                    st.success("✅ Chunking settings applied!")
+                    st.rerun()
+
+            with st.expander("🔍 Retrieval", expanded=False):
+                retrieval_params = advanced_controls.render_retrieval_controls(rag_system)
+                if st.button("Apply Retrieval Settings", key="apply_retrieval"):
+                    self.config_service.apply_retrieval_config(rag_system, retrieval_params)
+                    st.success("✅ Retrieval settings applied!")
+                    st.rerun()
+
+            with st.expander("⚖️ Scoring", expanded=False):
+                weighting_params = advanced_controls.render_weighting_controls(rag_system)
+                if st.button("Apply Scoring Settings", key="apply_weighting"):
+                    self.config_service.apply_weighting_config(rag_system, weighting_params)
+                    st.success("✅ Scoring settings applied!")
+                    st.rerun()
+
+            with st.expander("🎯 Filters", expanded=False):
+                filter_params = advanced_controls.render_filter_controls(rag_system)
+                if st.button("Apply Filter Settings", key="apply_filters"):
+                    self.config_service.apply_filter_config(rag_system, filter_params)
+                    st.success("✅ Filter settings applied!")
+                    st.rerun()
+
+            with st.expander("🎛️ Presets", expanded=False):
+                selected_preset = advanced_controls.render_preset_controls()
+                if selected_preset and selected_preset != "Default":
+                    preset_config = advanced_controls.get_preset_config(selected_preset)
+                    self.config_service.apply_preset_config(rag_system, preset_config)
+                    st.success(f"✅ Applied {selected_preset} preset - All controls updated!")
+                    st.info("📊 Check other tabs to see updated values")
+                    st.rerun()
 
     def _render_document_management(self, rag_system: RAGOrchestrator) -> None:
-        doc_manager = DocumentManagement()
-        doc_manager.render_document_section(rag_system)
+        DocumentManagement.render_upload_section(rag_system)
+        DocumentManagement.render_selection_section(rag_system)
 
     def _render_agent_configuration(self, rag_system: RAGOrchestrator) -> None:
-        agent_config = AgentConfiguration()
-        agent_config.render_agent_section(rag_system, rag_system.qa_manager.agent_manager)
+        agent_manager = rag_system.qa_manager.get_agent_manager()
+        AgentConfiguration.render_agent_section(rag_system, agent_manager)
 
     def _render_conversation_sidebar(self, chat_history: StreamlitChatHistoryAdapter) -> None:
         chat_history.render_conversation_sidebar()
 
     def _render_stats_section(self, rag_system: RAGOrchestrator) -> None:
-        stats = KnowledgeBaseStats()
-        stats.render_stats_section(rag_system)
+        KnowledgeBaseStats.render_stats_section(rag_system)
 
-    def _display_conversation_history(self, chat_history: StreamlitChatHistoryAdapter) -> None:
-        if st.session_state.get("messages"):
-            for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+    def _update_conversation_context(self, rag_system: RAGOrchestrator, chat_history: StreamlitChatHistoryAdapter) -> None:
+        selected_doc = rag_system.selected_document
+        agent_config = None
 
-                    if message["role"] == "assistant":
-                        self._display_assistant_message_extras(message)
+        if selected_doc:
+            agent_manager = rag_system.qa_manager.get_agent_manager()
+            agent_config = agent_manager.get_agent_for_document(selected_doc)
+
+        chat_history.update_conversation_context(
+            document_name=selected_doc,
+            agent_type=agent_config.agent_type.value if agent_config else None
+        )
 
     def _display_assistant_message_extras(self, message: dict) -> None:
         if "metadata_summary" in message:

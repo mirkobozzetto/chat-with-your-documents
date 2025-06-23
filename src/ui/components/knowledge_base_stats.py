@@ -19,6 +19,8 @@ class KnowledgeBaseStats:
         except Exception as e:
             KnowledgeBaseStats._render_error_stats(e)
 
+        KnowledgeBaseStats._handle_document_deletion(rag_system)
+
     @staticmethod
     def _render_empty_stats() -> None:
         st.metric("Total Documents", "0")
@@ -42,7 +44,6 @@ class KnowledgeBaseStats:
     def _render_documents_list_with_actions(stats: dict, rag_system: RAGSystem) -> None:
         with st.expander("📋 Available Documents", expanded=True):
             for doc in stats["available_documents"]:
-                # Get document info
                 doc_info = rag_system.get_document_info(doc)
 
                 with st.container():
@@ -83,7 +84,6 @@ class KnowledgeBaseStats:
     def render_sidebar_section(rag_system: RAGSystem) -> None:
         with st.sidebar:
             KnowledgeBaseStats.render_stats_section(rag_system)
-            KnowledgeBaseStats._handle_document_deletion(rag_system)
 
     @staticmethod
     def _handle_document_deletion(rag_system: RAGSystem) -> None:
@@ -102,7 +102,10 @@ class KnowledgeBaseStats:
 
                         if success:
                             st.success(f"Document '{doc}' deleted successfully!")
-                            del st.session_state[f"confirm_delete_{doc}"]
+                            keys_to_delete = [key for key in st.session_state.keys() if doc in key]
+                            for key in keys_to_delete:
+                                if key in st.session_state:
+                                    del st.session_state[key]
                             st.rerun()
                         else:
                             st.error(f"Failed to delete document '{doc}'")

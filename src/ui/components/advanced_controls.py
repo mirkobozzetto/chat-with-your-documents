@@ -251,7 +251,9 @@ class AdvancedControls:
             "Default": "Balanced settings for general use",
             "Academic": "Optimized for academic documents",
             "Technical": "Enhanced for technical documentation",
-            "Creative": "Configured for creative content"
+            "Creative": "Configured for creative content",
+            "Contextual RAG": "🧠 Anthropic's Contextual RAG with optimal settings",
+            "Agentic + Contextual": "🤖 Smart chunking + contextual preprocessing"
         }
 
         selected_preset = st.selectbox(
@@ -319,6 +321,46 @@ class AdvancedControls:
                 "section_match_boost": 1.3,
                 "pdf_document_boost": 1.1,
                 "early_position_boost": 1.3
+            },
+            "Contextual RAG": {
+                "chunk_size": 1500,
+                "chunk_overlap": 300,
+                "chunk_strategy": "semantic",
+                "semantic_threshold": 95,
+                "retrieval_k": 6,
+                "fetch_k": 25,
+                "lambda_mult": 0.8,
+                "chapter_match_boost": 1.8,
+                "section_match_boost": 1.5,
+                "pdf_document_boost": 1.2,
+                "early_position_boost": 1.15,
+                "enable_contextual_rag": True,
+                "dense_weight": 0.6,
+                "sparse_weight": 0.4,
+                "use_neural_reranker": True,
+                "final_retrieval_k": 5,
+                "relevance_weight": 0.7,
+                "original_weight": 0.3
+            },
+            "Agentic + Contextual": {
+                "chunk_size": 1800,
+                "chunk_overlap": 350,
+                "chunk_strategy": "agentic_context",
+                "agentic_confidence_threshold": 0.75,
+                "retrieval_k": 8,
+                "fetch_k": 30,
+                "lambda_mult": 0.85,
+                "chapter_match_boost": 2.0,
+                "section_match_boost": 1.7,
+                "pdf_document_boost": 1.3,
+                "early_position_boost": 1.2,
+                "enable_contextual_rag": True,
+                "dense_weight": 0.7,
+                "sparse_weight": 0.3,
+                "use_neural_reranker": True,
+                "final_retrieval_k": 4,
+                "relevance_weight": 0.8,
+                "original_weight": 0.2
             }
         }
         return presets.get(preset_name, presets["Default"])

@@ -28,7 +28,7 @@ class FileHandler:
     @staticmethod
     def process_document(rag_system: RAGSystem, file_path: str, filename: str) -> bool:
         file_size_mb = FileHandler.get_file_size_mb(file_path)
-        estimated_time = rag_system.document_processor.estimate_processing_time(file_size_mb)
+        estimated_time = rag_system.doc_processor_manager.get_document_processor().estimate_processing_time(file_size_mb)
 
         st.info(f"📊 File size: {file_size_mb:.1f} MB | Estimated time: {estimated_time}")
 

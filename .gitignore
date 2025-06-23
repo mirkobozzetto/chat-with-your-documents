@@ -129,3 +129,5 @@ auth_sessions.json
 SUMMARY.md
 CLAUDE.md
 .cursor/
+.roo/
+.clinerules

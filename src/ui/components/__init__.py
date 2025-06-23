@@ -16,6 +16,7 @@ from .chat_interface import ChatInterface
 from .agent_configuration import AgentConfiguration
 from .auth_component import AuthComponent
 from .debug_sidebar import DebugSidebar
+from .advanced_controls import AdvancedControls
 
 __all__ = [
     'DocumentManagement',
@@ -23,5 +24,6 @@ __all__ = [
     'ChatInterface',
     'AgentConfiguration',
     'AuthComponent',
-    'DebugSidebar'
+    'DebugSidebar',
+    'AdvancedControls'
 ]

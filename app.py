@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 from src.ui.session_manager import SessionManager
-from src.ui.components import DocumentManagement, KnowledgeBaseStats, AgentConfiguration, AuthComponent, DebugSidebar
+from src.ui.components import DocumentManagement, KnowledgeBaseStats, AgentConfiguration, AuthComponent, DebugSidebar, AdvancedControls
 from src.ui.adapters import StreamlitChatHistoryAdapter
 
 
@@ -52,6 +52,26 @@ def render_sidebar(rag_system, chat_history, session_manager):
         chat_history.render_conversation_sidebar()
 
         KnowledgeBaseStats.render_stats_section(rag_system)
+
+        if st.checkbox("🔧 Advanced Settings", key="advanced_settings_toggle"):
+            advanced_controls = AdvancedControls()
+            
+            with st.expander("⚙️ Chunking", expanded=False):
+                chunking_params = advanced_controls.render_chunking_controls(rag_system)
+                
+            with st.expander("🔍 Retrieval", expanded=False):
+                retrieval_params = advanced_controls.render_retrieval_controls(rag_system)
+                
+            with st.expander("⚖️ Scoring", expanded=False):
+                weighting_params = advanced_controls.render_weighting_controls(rag_system)
+                
+            with st.expander("🎯 Filters", expanded=False):
+                filter_params = advanced_controls.render_filter_controls(rag_system)
+                
+            with st.expander("🎛️ Presets", expanded=False):
+                selected_preset = advanced_controls.render_preset_controls()
+                if selected_preset and selected_preset != "Default":
+                    st.success(f"Applied {selected_preset} preset")
 
         DebugSidebar.render_retrieval_debug(rag_system)
         DebugSidebar.render_quick_settings(rag_system)

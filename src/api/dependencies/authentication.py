@@ -1,18 +1,18 @@
 # src/api/dependencies/authentication.py
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
-import os
 
 from src.auth.api_auth_manager import ApiAuthManager
 from src.api.models.auth_models import UserInfo
+from src.security.key_manager import KeyManager
 
 security = HTTPBearer()
+key_manager = KeyManager()
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this-in-production")
+JWT_SECRET_KEY = key_manager.get_jwt_secret_key()
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

@@ -2,8 +2,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from typing import List, Optional
-import os
-import tempfile
 import time
 from pathlib import Path
 
@@ -20,6 +18,7 @@ from src.api.dependencies.rag_system import get_user_rag_system
 from src.api.dependencies.authentication import get_optional_current_user
 from src.api.models.auth_models import UserInfo
 from src.rag_system import RAGOrchestrator
+from src.security import validate_uploaded_file_secure, get_temp_file_manager
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
@@ -32,29 +31,25 @@ async def upload_document(
     rag_system: RAGOrchestrator = Depends(get_user_rag_system),
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
-    if not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No filename provided"
-        )
-
-    file_ext = Path(file.filename).suffix.lower()
-    if file_ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type '{file_ext}' not supported. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
-        )
+    user_id = current_user.username if current_user else "anonymous"
+    temp_manager = get_temp_file_manager()
 
     try:
         start_time = time.time()
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
-            content = await file.read()
-            tmp_file.write(content)
-            tmp_file_path = tmp_file.name
+        validation_result = validate_uploaded_file_secure(file)
 
-        try:
-            rag_system.process_document(tmp_file_path)
+        file_content = await file.read()
+        file_hash = validation_result['security_checks']['file_hash']
+
+        with temp_manager.secure_temp_file_context(
+            content=file_content,
+            original_filename=file.filename,
+            file_hash=file_hash,
+            user_id=user_id
+        ) as temp_path:
+
+            rag_system.process_document(temp_path)
 
             processing_time = time.time() - start_time
 
@@ -72,12 +67,11 @@ async def upload_document(
                 chunk_count=chunk_count
             )
 
-        finally:
-            os.unlink(tmp_file_path)
-
+    except HTTPException:
+        raise
     except Exception as e:
         return DocumentUploadResponse(
-            filename=file.filename,
+            filename=file.filename or "unknown",
             status="error",
             message=f"Error processing document: {str(e)}"
         )

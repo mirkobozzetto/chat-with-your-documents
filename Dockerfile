@@ -15,6 +15,7 @@ COPY . .
 
 RUN mkdir -p chat_history/conversations
 RUN mkdir -p chroma_db
+RUN chmod +x scripts/db/init_db.py
 
 EXPOSE 8501
 

@@ -40,3 +40,15 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 python-multipart>=0.0.6
 python-jose[cryptography]>=3.3.0
+
+# Contextual RAG
+rank-bm25==0.2.2
+
+# Security enhancements
+python-magic>=0.4.27
+cryptography>=41.0.7
+
+# Database ORM
+sqlmodel>=0.0.16
+psycopg2-binary>=2.9.9
+alembic>=1.13.0

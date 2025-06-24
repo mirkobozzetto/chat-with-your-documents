@@ -17,6 +17,28 @@ A modern RAG (Retrieval-Augmented Generation) system using OpenAI for embeddings
 
 ## Installation
 
+### Docker (Recommended)
+
+```bash
+# Copy environment template
+cp .env.example .env
+# Edit .env with your API keys
+
+# Build and start services
+make build
+make up
+
+# Initialize database
+make init-db
+
+# Create admin user
+make create-user USER=admin PASS=yourpassword
+```
+
+Access: `http://localhost:8501`
+
+### Manual Installation
+
 **Install dependencies:**
 
 ```bash
@@ -54,8 +76,10 @@ python3 cli.py path/to/your/document.pdf
 - **LangChain**: RAG framework with experimental semantic chunking
 - **OpenAI**: Latest embeddings (text-embedding-3-large) + Chat (gpt-4.1-2025-04-14)
 - **Vector Stores**: Qdrant (cloud) or ChromaDB (local) with factory pattern
-- **Authentication**: bcrypt-based user management (optional)
+- **Database**: PostgreSQL with SQLModel for user management and chat history
+- **Authentication**: bcrypt-based user management with database persistence
 - **Streamlit**: Web interface with modular components
+- **Docker**: Containerized deployment with PostgreSQL integration
 - **Custom Qdrant Client**: Direct HTTP client for better reliability
 
 ## Configuration
@@ -89,6 +113,16 @@ All settings are configurable via environment variables in your `.env` file:
 - `RETRIEVAL_FETCH_K`: Number of candidates to consider
 
 ## Quick Start
+
+### Docker Setup
+
+1. Copy `.env.example` to `.env` and configure your API keys
+2. Choose vector store: Qdrant (production) or ChromaDB (local)
+3. Run: `make build && make up && make init-db`
+4. Create user: `make create-user USER=admin PASS=yourpassword`
+5. Access: `http://localhost:8501`
+
+### Manual Setup
 
 1. Copy `.env.example` to `.env` and configure your API keys
 2. Choose vector store: Qdrant (production) or ChromaDB (local)

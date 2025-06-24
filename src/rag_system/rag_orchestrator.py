@@ -81,16 +81,16 @@ class RAGOrchestrator:
     def _initialize_contextual_components(self) -> None:
         if self.enable_contextual_rag:
             print("🔧 Initializing Contextual RAG components...")
-            
+
             self.hybrid_search_engine = HybridSearchEngine(
                 vector_store=None,
                 dense_weight=self.config.get("DENSE_WEIGHT", 0.6),
                 sparse_weight=self.config.get("SPARSE_WEIGHT", 0.4)
             )
-            
+
             fusion_strategy = ReciprocalRankFusion(k=self.config.get("RRF_K", 60))
             self.rank_fusion_engine = RankFusionEngine(fusion_strategy)
-            
+
             if self.config.get("USE_NEURAL_RERANKER", True):
                 self.reranker = NeuralReranker(
                     llm=self.ai_service_manager.get_llm(),
@@ -117,7 +117,7 @@ class RAGOrchestrator:
 
             # Create QA chain AFTER synchronization to use correct collection
             self.qa_manager.create_qa_chain()
-            
+
             # Initialize hybrid search if contextual RAG is enabled
             if self.enable_contextual_rag and self.hybrid_search_engine:
                 self._setup_hybrid_search()
@@ -138,7 +138,7 @@ class RAGOrchestrator:
             self.document_manager.finalize_document_processing(filename)
 
             self.qa_manager.create_qa_chain()
-            
+
             # Setup hybrid search for processed document if contextual RAG is enabled
             if self.enable_contextual_rag and self.hybrid_search_engine:
                 self._setup_hybrid_search()
@@ -226,7 +226,7 @@ class RAGOrchestrator:
             vector_store = self.vector_store_manager.get_vector_store()
             if vector_store and self.hybrid_search_engine:
                 self.hybrid_search_engine.vector_store = vector_store
-                
+
                 # Get all documents for BM25 indexing
                 all_documents = []
                 if hasattr(vector_store, '_collection') and vector_store._collection:
@@ -242,29 +242,29 @@ class RAGOrchestrator:
         try:
             if not self.hybrid_search_engine or not self.rank_fusion_engine or not self.reranker:
                 return self.qa_manager.ask_question(question, chat_history)
-            
+
             # Step 1: Hybrid search
             search_results = self.hybrid_search_engine.hybrid_search(
                 query=question,
                 k=self.config.get("CONTEXTUAL_RETRIEVAL_K", 20)
             )
-            
+
             # Step 2: Rank fusion (already done in hybrid search)
             ranked_docs = [(result.document, result.combined_score) for result in search_results]
-            
+
             # Step 3: Neural reranking
             reranked_results = self.reranker.rerank_documents(
                 query=question,
                 documents=ranked_docs,
                 top_k=self.config.get("FINAL_RETRIEVAL_K", 5)
             )
-            
+
             # Step 4: Generate answer using reranked documents
             final_docs = [result.document for result in reranked_results]
-            
+
             # Use QA manager with custom documents
             return self.qa_manager.ask_question_with_documents(question, final_docs, chat_history)
-            
+
         except Exception as e:
             print(f"⚠️ Contextual RAG failed, falling back to standard RAG: {e}")
             return self.qa_manager.ask_question(question, chat_history)

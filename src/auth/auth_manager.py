@@ -17,7 +17,7 @@ class AuthManager:
 
     def _restore_session(self) -> None:
         if self.persistence.is_session_valid():
-            session_data = self.persistence.get_any_valid_session()
+            session_data = self.persistence.get_current_session()
             if session_data:
                 st.session_state.authenticated = True
                 st.session_state.auth_username = session_data['username']
@@ -85,7 +85,7 @@ class AuthManager:
     def refresh_session(self) -> None:
         if self.is_user_authenticated():
             st.session_state.auth_timestamp = datetime.now()
-            session_data = self.persistence.get_any_valid_session()
+            session_data = self.persistence.get_current_session()
             if session_data:
                 self.persistence.save_auth_session(session_data['username'])
 

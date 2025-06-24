@@ -1,23 +1,18 @@
 # src/ui/components/auth_component.py
 import streamlit as st
-from src.auth.auth_manager import AuthManager
+from src.auth.db_auth_manager import DBAuthManager
 
 
 class AuthComponent:
 
     def __init__(self):
-        self.auth_manager = AuthManager()
+        self.auth_manager = DBAuthManager()
 
     def render_login_form(self) -> bool:
         st.title("🔐 RAG AI Assistant - Login")
 
-        if not self.auth_manager.config.is_auth_enabled():
-            st.info("Authentication is disabled")
-            return True
-
-        if not self.auth_manager.config.has_global_access():
-            st.error("🚫 Service temporarily unavailable")
-            st.stop()
+        # Database auth is always enabled
+        pass
 
         with st.form("login_form"):
             st.subheader("Please login to continue")
@@ -50,12 +45,8 @@ class AuthComponent:
 
     def _render_login_footer(self) -> None:
         st.markdown("---")
-        auth_status = self.auth_manager.config.get_auth_status()
-
-        if auth_status["total_users"] > 0:
-            st.info(f"📊 {auth_status['total_users']} authorized users configured")
-        else:
-            st.warning("⚠️ No users configured. Check AUTH_USERS environment variable.")
+        user_count = self.auth_manager.get_user_count()
+        st.info(f"📊 {user_count} database users configured")
 
     def render_user_info(self) -> None:
         if not self.auth_manager.is_user_authenticated():
@@ -81,22 +72,26 @@ class AuthComponent:
                 st.rerun()
 
     def render_auth_status(self) -> None:
-        if not self.auth_manager.config.is_auth_enabled():
+        if hasattr(self.auth_manager, 'config') and not self.auth_manager.config.is_auth_enabled():
             return
 
         with st.expander("🔐 Authentication Status"):
-            auth_status = self.auth_manager.config.get_auth_status()
+            if hasattr(self.auth_manager, 'config'):
+                auth_status = self.auth_manager.config.get_auth_status()
 
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Auth Enabled", "✅" if auth_status["auth_enabled"] else "❌")
-            with col2:
-                st.metric("Global Access", "✅" if auth_status["global_access"] else "❌")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Auth Enabled", "✅" if auth_status["auth_enabled"] else "❌")
+                with col2:
+                    st.metric("Global Access", "✅" if auth_status["global_access"] else "❌")
 
-            st.metric("Configured Users", auth_status["total_users"])
+                st.metric("Configured Users", auth_status["total_users"])
 
-            if auth_status["configured_users"]:
-                st.text("Users: " + ", ".join(auth_status["configured_users"]))
+                if auth_status["configured_users"]:
+                    st.text("Users: " + ", ".join(auth_status["configured_users"]))
+            else:
+                st.metric("Database Auth", "✅")
+                st.metric("Active Users", self.auth_manager.get_user_count())
 
     def check_authentication(self) -> bool:
         self.auth_manager.refresh_session()
@@ -107,7 +102,4 @@ class AuthComponent:
         return self.render_login_form()
 
     def protect_app(self) -> bool:
-        if not self.auth_manager.config.is_auth_enabled():
-            return True
-
         return self.check_authentication()

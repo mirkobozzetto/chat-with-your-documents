@@ -70,20 +70,29 @@ class AuthSessionPersistence:
 
         self._save_sessions(sessions)
 
-    def get_any_valid_session(self) -> Optional[Dict]:
+    def get_current_session(self) -> Optional[Dict]:
         sessions = self._load_sessions()
+        browser_session_id = self._get_browser_session_id()
+
+        session_data = sessions.get(browser_session_id)
+        if not session_data:
+            return None
 
         current_time = datetime.now()
+        expires_at = datetime.fromisoformat(session_data['expires_at'])
 
-        for session_id, session_data in sessions.items():
-            expires_at = datetime.fromisoformat(session_data['expires_at'])
-            if expires_at > current_time:
-                session_data['last_activity'] = current_time.isoformat()
-                sessions[session_id] = session_data
-                self._save_sessions(sessions)
-                return session_data
+        if expires_at > current_time:
+            session_data['last_activity'] = current_time.isoformat()
+            sessions[browser_session_id] = session_data
+            self._save_sessions(sessions)
+            return session_data
+        else:
+            del sessions[browser_session_id]
+            self._save_sessions(sessions)
+            return None
 
-        return None
+    def get_any_valid_session(self) -> Optional[Dict]:
+        return self.get_current_session()
 
     def clear_auth_session(self) -> None:
         sessions = self._load_sessions()
@@ -94,9 +103,26 @@ class AuthSessionPersistence:
             self._save_sessions(sessions)
 
     def is_session_valid(self) -> bool:
-        session_data = self.get_any_valid_session()
+        session_data = self.get_current_session()
         if not session_data:
             return False
 
         expires_at = datetime.fromisoformat(session_data['expires_at'])
         return datetime.now() < expires_at
+
+    def create_session(self, username: str, login_time: datetime) -> None:
+        self.save_auth_session(username)
+
+    def clear_sessions(self) -> None:
+        sessions = self._load_sessions()
+        browser_session_id = self._get_browser_session_id()
+
+        sessions_to_remove = []
+        for session_id, session_data in sessions.items():
+            if session_id == browser_session_id:
+                sessions_to_remove.append(session_id)
+
+        for session_id in sessions_to_remove:
+            del sessions[session_id]
+
+        self._save_sessions(sessions)

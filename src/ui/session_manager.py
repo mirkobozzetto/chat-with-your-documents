@@ -2,14 +2,14 @@
 import streamlit as st
 import os
 from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
-from src.auth import AuthManager
+from src.auth import DBAuthManager
 
 
 class SessionManager:
     """Manages Streamlit session state, authentication and RAG system initialization"""
 
     def __init__(self):
-        self.auth_manager = AuthManager()
+        self.auth_manager = DBAuthManager()
 
     def check_authentication(self) -> bool:
         """Check authentication status and redirect if needed"""
@@ -17,7 +17,7 @@ class SessionManager:
 
     def get_current_user(self) -> str:
         """Get currently authenticated user"""
-        return self.auth_manager.get_current_user()
+        return self.auth_manager.get_current_username()
 
     @staticmethod
     def check_api_key() -> bool:
@@ -77,20 +77,20 @@ class SessionManager:
     def get_session_info(self) -> dict:
         auth_info = self.auth_manager.get_session_info()
 
-        session_info = {
-            "authenticated": auth_info["authenticated"],
-            "auth_enabled": self.auth_manager.config.is_auth_enabled()
-        }
-
-        if auth_info["authenticated"]:
-            session_info.update({
+        if auth_info:
+            return {
+                "authenticated": True,
+                "auth_enabled": True,
                 "username": auth_info["username"],
                 "login_time": auth_info["login_time"],
                 "expires_at": auth_info["expires_at"],
                 "time_remaining": auth_info["time_remaining"]
-            })
-
-        return session_info
+            }
+        else:
+            return {
+                "authenticated": False,
+                "auth_enabled": True
+            }
 
     def logout(self) -> None:
         self.auth_manager.logout_user()

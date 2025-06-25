@@ -1,4 +1,7 @@
 # app.py
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.ui.controllers.app_controller import AppController
 
 

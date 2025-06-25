@@ -1,18 +1,19 @@
 # Makefile
-.PHONY: help build up down init-db clean
+.PHONY: help build up down init-db clean dev dev-down local rebuild
 
 help:
-	@echo "Available commands:"
-	@echo "  build     - Build Docker images"
-	@echo "  up        - Start services"
-	@echo "  down      - Stop services"
-	@echo "  init-db   - Initialize database tables"
-	@echo "  clean     - Clean Docker resources"
+	@echo "🚀 RAG Development Commands:"
+	@echo "  dev       - Start Postgres + run Streamlit locally"
+	@echo "  up        - Full Docker stack"
+	@echo "  rebuild   - Force rebuild + start (for code changes)"
+	@echo "  down      - Stop everything"
+	@echo "  clean     - Nuclear clean"
 
 build:
 	docker-compose build
 
 up:
+	@echo "🐳 Starting full Docker stack..."
 	docker-compose up -d
 
 down:
@@ -32,6 +33,18 @@ create-user:
 		exit 1; \
 	fi
 	docker-compose exec rag-app python scripts/db/create_user.py $(USER) $(PASS)
+
+dev:
+	@echo "🚀 Dev mode: Postgres + local Streamlit"
+	docker-compose up -d postgres
+	@echo "✅ Postgres ready on :5433"
+	streamlit run app.py
+
+rebuild:
+	@echo "🔄 Force rebuild for code changes..."
+	docker-compose down
+	docker-compose build --no-cache
+	docker-compose up -d
 
 clean:
 	docker-compose down -v

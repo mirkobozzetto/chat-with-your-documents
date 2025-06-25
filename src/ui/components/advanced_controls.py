@@ -252,8 +252,8 @@ class AdvancedControls:
             "Academic": "Optimized for academic documents",
             "Technical": "Enhanced for technical documentation",
             "Creative": "Configured for creative content",
-            "Contextual RAG": "🧠 Anthropic's Contextual RAG with optimal settings",
-            "Agentic + Contextual": "🤖 Smart chunking + contextual preprocessing"
+            "Contextual RAG": "Anthropic's Contextual RAG with optimal settings",
+            "Agentic + Contextual": "Smart chunking + contextual preprocessing"
         }
 
         selected_preset = st.selectbox(

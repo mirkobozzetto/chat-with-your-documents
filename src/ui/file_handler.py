@@ -13,6 +13,11 @@ class FileHandler:
         temp_path = f"temp_{uploaded_file.name}"
         with open(temp_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
+        
+        # Store file path in session for smart preset analysis
+        st.session_state.uploaded_file_path = temp_path
+        st.session_state.uploaded_file_name = uploaded_file.name
+        
         return temp_path
 
     @staticmethod

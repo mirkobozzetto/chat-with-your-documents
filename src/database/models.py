@@ -6,6 +6,7 @@ import uuid
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     username: str = Field(unique=True, index=True)
@@ -15,6 +16,7 @@ class User(SQLModel, table=True):
 
 class Conversation(SQLModel, table=True):
     __tablename__ = "conversations"
+    __table_args__ = {'extend_existing': True}
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_id: str = Field(foreign_key="users.id", index=True)

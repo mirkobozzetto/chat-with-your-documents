@@ -4,6 +4,7 @@ import streamlit as st
 from src.rag_system.rag_orchestrator import RAGOrchestrator
 from src.ui.adapters import StreamlitChatHistoryAdapter
 from src.ui.components import DocumentManagement, KnowledgeBaseStats, AgentConfiguration, AuthComponent, AdvancedControls
+from src.ui.components.smart_preset_selector import SmartPresetSelector
 from src.services.config_service import ConfigService
 
 
@@ -19,7 +20,7 @@ class MainView:
         )
 
     def render_page_header(self) -> None:
-        st.title("🤖 RAG AI Assistant")
+        st.title("AI Assistant")
         st.markdown("Upload documents and ask questions about their content using OpenAI embeddings.")
 
     def render_sidebar(self, rag_system: RAGOrchestrator, chat_history: StreamlitChatHistoryAdapter, session_manager: Any) -> None:
@@ -53,8 +54,47 @@ class MainView:
                     self._display_assistant_message_extras(message)
 
     def _render_advanced_settings(self, rag_system: RAGOrchestrator) -> None:
-        if st.checkbox("🔧 Advanced Settings", key="advanced_settings_toggle"):
+        # Smart Presets Interface (Principal)
+        if not st.session_state.get('show_expert_mode', False):
+            st.subheader("🧠 Configuration Intelligente")
+
+            smart_selector = SmartPresetSelector()
+
+            # If a document is selected, analyze for recommendation
+            current_doc = st.session_state.get('uploaded_file_path')
+            if current_doc:
+                selected_preset = smart_selector.render_smart_interface(current_doc)
+            else:
+                st.info("📄 Upload a document for automatic recommendation")
+                selected_preset = smart_selector.render_preset_selection()
+
+            # Apply the selected preset
+            if selected_preset:
+                preset_config = smart_selector.get_preset_config(selected_preset)
+                self.config_service.apply_preset_config(rag_system, preset_config)
+                st.success(f"✅ Preset {smart_selector.presets[selected_preset]['display_name']} applied!")
+                st.rerun()
+
+            # Comparison table
+            with st.expander("📋 Comparaison des Presets"):
+                smart_selector.render_comparison_table()
+
+            # Expert mode button
+            st.divider()
+            if st.button("🔧 Expert Mode (Advanced Controls)", type="secondary"):
+                st.session_state.show_expert_mode = True
+                st.rerun()
+
+        # Expert mode (Advanced Controls)
+        else:
+            st.subheader("🔧 Expert Mode")
             st.warning("⚠️ Configure before uploading documents. Changes apply to new uploads only.")
+
+            # Smart presets back button
+            if st.button("🧠 Back to Smart Presets", type="primary"):
+                st.session_state.show_expert_mode = False
+                st.rerun()
+
             advanced_controls = AdvancedControls()
 
             with st.expander("⚙️ Chunking", expanded=False):
@@ -85,7 +125,7 @@ class MainView:
                     st.success("✅ Filter settings applied!")
                     st.rerun()
 
-            with st.expander("🎛️ Presets", expanded=False):
+            with st.expander("🎛️ Presets Legacy", expanded=False):
                 selected_preset = advanced_controls.render_preset_controls()
                 if selected_preset and selected_preset != "Default":
                     preset_config = advanced_controls.get_preset_config(selected_preset)

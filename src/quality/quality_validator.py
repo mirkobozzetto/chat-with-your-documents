@@ -11,11 +11,11 @@ except ImportError:
 
 @dataclass
 class QualityThresholds:
-    min_semantic_coherence: float = 0.5
-    min_size_consistency: float = 0.5
-    min_overlap_quality: float = 0.4
-    min_information_density: float = 0.3
-    min_overall_score: float = 0.5
+    min_semantic_coherence: float = 0.4
+    min_size_consistency: float = 0.3
+    min_overlap_quality: float = 0.3
+    min_information_density: float = 0.25
+    min_overall_score: float = 0.4
 
 
 @dataclass

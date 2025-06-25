@@ -104,6 +104,11 @@ coverage.xml
 .pytest_cache/
 .tox/
 
+# Test scripts
+*test*.py
+debug*.py
+final*.py
+
 # Documentation builds
 docs/_build/
 
@@ -132,3 +137,4 @@ CLAUDE.md
 .roo/
 .clinerules
 .secrets/
+.claudedocs/

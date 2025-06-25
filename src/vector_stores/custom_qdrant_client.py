@@ -1,6 +1,7 @@
 # src/vector_stores/custom_qdrant_client.py
 import requests
 import uuid
+import os
 from typing import List, Dict, Any, Optional
 from qdrant_client.models import VectorParams, PointStruct
 import urllib3
@@ -11,13 +12,15 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class CustomQdrantClient:
 
-    def __init__(self, url: str, api_key: str, timeout: int = 30):
+    def __init__(self, url: str, api_key: Optional[str] = None, timeout: int = 30):
         self.base_url = url.rstrip('/')
-        self.api_key = api_key
+        self.api_key = api_key or os.getenv('QDRANT_API_KEY')
+        if not self.api_key:
+            raise ValueError("API key must be provided either as parameter or QDRANT_API_KEY environment variable")
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update({
-            "api-key": api_key,
+            "api-key": self.api_key,
             "Content-Type": "application/json"
         })
         self.session.verify = False
@@ -26,10 +29,16 @@ class CustomQdrantClient:
         url = f"{self.base_url}{endpoint}"
         kwargs['timeout'] = self.timeout
 
-        if method == "PUT" and "json" in kwargs:
+        # ALWAYS mask API key - disable debug logs by default
+        debug_enabled = os.getenv("DEBUG_QDRANT_REQUESTS", "false").lower() == "true"
+        if debug_enabled:
             print(f"🔍 Request URL: {url}")
-            print(f"🔍 Request headers: {dict(self.session.headers)}")
-            print(f"🔍 Request payload: {json.dumps(kwargs['json'], indent=2)[:500]}...")
+            safe_headers = dict(self.session.headers)
+            if "api-key" in safe_headers:
+                safe_headers["api-key"] = "***masked***"
+            print(f"🔍 Request headers: {safe_headers}")
+            if "json" in kwargs:
+                print(f"🔍 Request payload: {json.dumps(kwargs['json'], indent=2)[:500]}...")
 
         try:
             response = self.session.request(method, url, **kwargs)

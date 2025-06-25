@@ -32,13 +32,20 @@ class RAGOrchestrator:
             chat_temperature=self.config["CHAT_TEMPERATURE"]
         )
 
+        enable_quality_gate = self.config.get("ENABLE_QUALITY_GATE", True)
+        enable_empirical_validation = self.config.get("ENABLE_EMPIRICAL_VALIDATION", False)
+
+        print(f"🚀 RAG System config: Quality Gate = {enable_quality_gate}, Empirical = {enable_empirical_validation}", flush=True)
+
         self.doc_processor_manager = DocumentProcessorManager(
             embeddings=self.ai_service_manager.get_embeddings(),
             chunk_strategy=self.config["CHUNK_STRATEGY"],
             chunk_size=self.config["CHUNK_SIZE"],
             chunk_overlap=self.config["CHUNK_OVERLAP"],
             llm=self.ai_service_manager.get_llm() if self.enable_contextual_rag else None,
-            enable_contextual=self.enable_contextual_rag
+            enable_contextual=self.enable_contextual_rag,
+            enable_quality_gate=enable_quality_gate,
+            enable_empirical_validation=enable_empirical_validation
         )
 
         self.vector_store_manager = VectorStoreFactory.create_vector_store_manager(
@@ -129,10 +136,22 @@ class RAGOrchestrator:
             if hasattr(self.vector_store_manager, 'set_current_document'):
                 self.vector_store_manager.set_current_document(filename)
 
-            chunks = self.doc_processor_manager.process_document_pipeline(
+            result = self.doc_processor_manager.process_document_pipeline(
                 pdf_path, filename, progress_callback
             )
 
+            chunks, should_vectorize = result
+
+            if not should_vectorize:
+                print(f"🚫 Document {filename} rejected by quality gate - VECTORIZATION SKIPPED")
+                print(f"📊 Processing terminated early due to quality concerns")
+                return
+
+            if not chunks:
+                print(f"⚠️ No chunks created for {filename} - skipping vectorization")
+                return
+
+            print(f"🚀 Quality gate PASSED - proceeding with vectorization of {len(chunks)} chunks")
             self.vector_store_manager.create_vector_store(chunks, progress_callback)
 
             self.document_manager.finalize_document_processing(filename)

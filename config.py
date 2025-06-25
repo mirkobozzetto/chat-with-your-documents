@@ -48,3 +48,7 @@ QDRANT_VERIFY_SSL = os.getenv("QDRANT_VERIFY_SSL", "false").lower() == "true"
 AUTH_ENABLED = os.getenv("AUTH_ENABLED", "false").lower() == "true"
 AUTH_USERS = os.getenv("AUTH_USERS", "")
 AUTH_GLOBAL_ACCESS = os.getenv("AUTH_GLOBAL_ACCESS", "true").lower() == "true"
+
+ENABLE_QUALITY_GATE = os.getenv("ENABLE_QUALITY_GATE", "true").lower() == "true"
+ENABLE_EMPIRICAL_VALIDATION = os.getenv("ENABLE_EMPIRICAL_VALIDATION", "false").lower() == "true"
+QUALITY_SCORE_THRESHOLD = float(os.getenv("QUALITY_SCORE_THRESHOLD", "0.6"))

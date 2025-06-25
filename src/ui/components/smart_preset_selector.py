@@ -158,43 +158,28 @@ class SmartPresetSelector:
 
         for preset_key, preset in self.presets.items():
             if preset_key == recommended_preset:
-                st.markdown(f"### {preset['display_name']} (Recommended)")
+                st.markdown(f"**{preset['display_name']} (Recommended)**")
             else:
-                st.markdown(f"### {preset['display_name']}")
+                st.markdown(f"**{preset['display_name']}**")
+            
+            st.write(f"*{preset['description']}*")
+            st.write(f"⏱️ {preset['processing_time']} | 🎯 {preset['quality_score_expected']}")
+            
+            if preset.get("warning"):
+                st.warning(preset['warning'])
+                cost_warning = self._get_cost_warning(preset_key)
+                if cost_warning:
+                    st.error(f"💰 {cost_warning}")
 
-            with st.expander(f"Details {preset['display_name']}", expanded=(preset_key == recommended_preset)):
-                col1, col2 = st.columns([3, 1])
-
-                with col1:
-                    st.write(f"**Description:** {preset['description']}")
-                    st.write(f"**Technical:** {preset['technical_details']}")
-                    st.write(f"**Processing time:** {preset['processing_time']}")
-                    st.write(f"**Expected quality score:** {preset['quality_score_expected']}")
-
-                    st.write("**Ideal for:**")
-                    for use_case in preset["use_cases"]:
-                        st.write(f"• {use_case}")
-
-                    if preset.get("warning"):
-                        st.warning(preset['warning'])
-
-                with col2:
-                    if st.button(
-                        f"Use {preset['display_name']}",
-                        key=f"btn_{preset_key}",
-                        type="primary" if preset_key == recommended_preset else "secondary"
-                    ):
-                        if preset["complexity"] in ["advanced", "expert"]:
-                            cost_warning = self._get_cost_warning(preset_key)
-                            with st.form(f"confirm_{preset_key}"):
-                                st.warning(f"{preset['display_name']} mode selected")
-                                st.write(preset.get("warning", ""))
-                                if cost_warning:
-                                    st.error(f"💰 Cost: {cost_warning}")
-                                if st.form_submit_button("Confirm"):
-                                    selected_preset = preset_key
-                        else:
-                            selected_preset = preset_key
+            if st.button(
+                f"Use {preset['display_name']}",
+                key=f"btn_{preset_key}",
+                type="primary" if preset_key == recommended_preset else "secondary",
+                use_container_width=True
+            ):
+                selected_preset = preset_key
+            
+            st.divider()
 
         return selected_preset
 
@@ -218,20 +203,25 @@ class SmartPresetSelector:
         return self.render_preset_selection(recommended)
 
     def render_comparison_table(self) -> None:
-        st.subheader("Preset Comparison")
-
-        data = []
-        for preset in self.presets.values():
-            data.append({
-                "Preset": preset["display_name"],
-                "Complexity": preset["complexity"].title(),
-                "Time": preset["processing_time"],
-                "Quality Score": preset["quality_score_expected"],
-                "Use Case": preset["use_cases"][0]
-            })
-
-        df = pd.DataFrame(data)
-        st.dataframe(df, use_container_width=True)
+        st.subheader("Preset Details")
+        
+        for preset_key, preset in self.presets.items():
+            st.markdown(f"**{preset['display_name']}** - {preset['description']}")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write(f"**Technical:** {preset['technical_details']}")
+                st.write(f"**Processing time:** {preset['processing_time']}")
+                st.write(f"**Quality score:** {preset['quality_score_expected']}")
+                st.write(f"**Complexity:** {preset['complexity'].title()}")
+            
+            with col2:
+                st.write("**Ideal for:**")
+                for use_case in preset["use_cases"]:
+                    st.write(f"• {use_case}")
+            
+            st.divider()
 
     def _get_cost_warning(self, preset_key: str) -> str:
         cost_estimates = {

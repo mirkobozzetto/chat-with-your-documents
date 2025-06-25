@@ -11,7 +11,7 @@ class DocumentProcessorManager:
         if chunk_strategy.startswith("agentic") or chunk_strategy == "hybrid_agentic":
             print(f"🤖 Initializing Agentic Document Processor with strategy: {chunk_strategy}")
             if enable_contextual:
-                print("🧠 Contextual RAG enabled with Agentic chunking")
+                print("Contextual RAG enabled with Agentic chunking")
             from src.document_management.agentic_document_processor import AgenticDocumentProcessor
             self.document_processor = AgenticDocumentProcessor(
                 embeddings=embeddings,

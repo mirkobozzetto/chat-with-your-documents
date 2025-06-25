@@ -9,7 +9,7 @@ class AuthComponent:
         self.auth_manager = DBAuthManager()
 
     def render_login_form(self) -> bool:
-        st.title("🔐 RAG AI Assistant - Login")
+        st.title("🔐 AI Assistant - Login")
 
         # Database auth is always enabled
         pass

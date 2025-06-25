@@ -8,12 +8,12 @@ class DocumentManagement:
 
     @staticmethod
     def render_upload_section(rag_system: RAGSystem) -> None:
-        st.header("📚 Document Management")
+        st.header("Document Management")
         FileHandler.handle_file_upload(rag_system)
 
     @staticmethod
     def render_selection_section(rag_system: RAGSystem) -> None:
-        st.subheader("📖 Document Selection")
+        st.subheader("Document Selection")
 
         try:
             available_docs = rag_system.get_available_documents()
@@ -55,9 +55,9 @@ class DocumentManagement:
     @staticmethod
     def _render_selection_status(rag_system: RAGSystem) -> None:
         if rag_system.selected_document:
-            st.info(f"🎯 Currently querying: {rag_system.selected_document}")
+            st.info(f"Currently querying: {rag_system.selected_document}")
         else:
-            st.info("🌐 Querying all documents")
+            st.info("Querying all documents")
 
     @staticmethod
     def render_complete_section(rag_system: RAGSystem) -> None:

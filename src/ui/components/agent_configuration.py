@@ -8,7 +8,7 @@ class AgentConfiguration:
 
     @staticmethod
     def render_agent_section(rag_system, agent_manager: AgentManager) -> None:
-        st.subheader("🤖 Agent Configuration")
+        st.subheader("Agent Configuration")
 
         available_docs = rag_system.get_available_documents()
         if not available_docs:
@@ -31,10 +31,10 @@ class AgentConfiguration:
 
         if current_config:
             agent_desc = agent_manager.get_agent_description(current_config.agent_type)
-            status = "🟢 Active" if current_config.is_active else "🔴 Inactive"
-            st.info(f"**Agent actuel:** {agent_desc}\n**Status:** {status}")
+            status = "Active" if current_config.is_active else "Inactive"
+            st.info(f"**Current agent:** {agent_desc}\n**Status:** {status}")
         else:
-            st.info("**Agent:** Par défaut (Conversationnel)")
+            st.info("**Agent:** Default (Conversationnel)")
 
     @staticmethod
     def _render_agent_selector(agent_manager: AgentManager, document_name: str) -> None:
@@ -48,7 +48,7 @@ class AgentConfiguration:
             st.rerun()
 
         st.selectbox(
-            "Type d'agent:",
+            "Agent type:",
             options=list(available_agents.keys()),
             format_func=lambda x: available_agents[x],
             index=list(available_agents.keys()).index(current_type),
@@ -66,17 +66,17 @@ class AgentConfiguration:
                 "Instructions spécifiques pour ce document:",
                 value=current_instructions,
                 height=100,
-                placeholder="Ex: Réponds toujours en bullet points, utilise un ton très technique...",
+                placeholder="Ex: Always respond in bullet points, use a very technical tone...",
                 key=f"custom_instructions_{document_name}"
             )
 
-            if st.button("Sauvegarder instructions", key=f"save_instructions_{document_name}"):
+            if st.button("Save instructions", key=f"save_instructions_{document_name}"):
                 if agent_manager.has_agent_configured(document_name):
                     agent_manager.update_custom_instructions(document_name, new_instructions)
-                    st.success("Instructions sauvegardées!")
+                    st.success("Instructions saved!")
                     st.rerun()
                 else:
-                    st.error("Configurez d'abord un agent pour ce document")
+                    st.error("Configure an agent for this document first")
 
     @staticmethod
     def _render_agent_actions(agent_manager: AgentManager, document_name: str) -> None:
@@ -86,40 +86,40 @@ class AgentConfiguration:
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("🔄 Activer/Désactiver", key=f"toggle_{document_name}"):
+            if st.button("Activate/Deactivate", key=f"toggle_{document_name}"):
                 is_active = agent_manager.toggle_agent_active(document_name)
-                status = "activé" if is_active else "désactivé"
+                status = "activated" if is_active else "deactivated"
                 st.success(f"Agent {status}!")
                 st.rerun()
 
         with col2:
-            if st.button("🗑️ Supprimer agent", key=f"remove_{document_name}"):
+            if st.button("🗑️ Delete agent", key=f"remove_{document_name}"):
                 agent_manager.remove_agent_from_document(document_name)
-                st.success("Agent supprimé!")
+                st.success("Agent deleted!")
                 st.rerun()
 
     @staticmethod
     def render_agents_overview(agent_manager: AgentManager) -> None:
-        st.subheader("📊 Vue d'ensemble des agents")
+        st.subheader("Agent Overview")
 
         stats = agent_manager.get_agent_stats()
         configurations = agent_manager.get_all_document_configurations()
 
         if stats['total_configured'] == 0:
-            st.info("Aucun agent configuré")
+            st.info("No agent configured")
             return
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Agents configurés", stats['total_configured'])
+            st.metric("Configured agents", stats['total_configured'])
         with col2:
-            st.metric("Agents actifs", stats['active_agents'])
+            st.metric("Active agents", stats['active_agents'])
         with col3:
             most_used = stats.get('most_used_agent', 'N/A')
-            st.metric("Plus utilisé", most_used)
+            st.metric("Most used", most_used)
 
         if configurations:
-            with st.expander("Détail des configurations"):
+            with st.expander("Configuration details"):
                 for doc_name, config in configurations.items():
                     status_icon = "🟢" if config.is_active else "🔴"
                     agent_name = config.agent_type.value.title()
@@ -131,5 +131,5 @@ class AgentConfiguration:
         with st.sidebar:
             AgentConfiguration.render_agent_section(rag_system, agent_manager)
 
-        with st.expander("🤖 Gestion des Agents", expanded=False):
+        with st.expander("Agent Management", expanded=False):
             AgentConfiguration.render_agents_overview(agent_manager)

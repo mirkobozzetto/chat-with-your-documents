@@ -93,7 +93,7 @@ class QAOrchestrator:
                 result["source_documents"]
             )
             if len(expanded_docs) > len(result["source_documents"]):
-                print(f"🧠 Context expansion: {len(result['source_documents'])} → {len(expanded_docs)} chunks")
+                print(f"Context expansion: {len(result['source_documents'])} → {len(expanded_docs)} chunks")
                 result["source_documents"] = expanded_docs
 
         # 4. Process and format results

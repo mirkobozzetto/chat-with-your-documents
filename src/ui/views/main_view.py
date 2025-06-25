@@ -14,7 +14,7 @@ class MainView:
 
     def setup_page_config(self) -> None:
         st.set_page_config(
-            page_title="RAG AI Assistant",
+            page_title="AI Assistant",
             page_icon="🤖",
             layout="wide"
         )
@@ -56,7 +56,7 @@ class MainView:
     def _render_advanced_settings(self, rag_system: RAGOrchestrator) -> None:
         # Smart Presets Interface (Principal)
         if not st.session_state.get('show_expert_mode', False):
-            st.subheader("🧠 Configuration Intelligente")
+            st.subheader("Smart Presets")
 
             smart_selector = SmartPresetSelector()
 
@@ -75,8 +75,8 @@ class MainView:
                 st.success(f"✅ Preset {smart_selector.presets[selected_preset]['display_name']} applied!")
                 st.rerun()
 
-            # Comparison table
-            with st.expander("📋 Comparaison des Presets"):
+            # Preset details
+            with st.expander("📋 Preset Details"):
                 smart_selector.render_comparison_table()
 
             # Expert mode button
@@ -125,14 +125,6 @@ class MainView:
                     st.success("✅ Filter settings applied!")
                     st.rerun()
 
-            with st.expander("🎛️ Presets Legacy", expanded=False):
-                selected_preset = advanced_controls.render_preset_controls()
-                if selected_preset and selected_preset != "Default":
-                    preset_config = advanced_controls.get_preset_config(selected_preset)
-                    self.config_service.apply_preset_config(rag_system, preset_config)
-                    st.success(f"✅ Applied {selected_preset} preset - All controls updated!")
-                    st.info("📊 Check other tabs to see updated values")
-                    st.rerun()
 
     def _render_document_management(self, rag_system: RAGOrchestrator) -> None:
         DocumentManagement.render_upload_section(rag_system)

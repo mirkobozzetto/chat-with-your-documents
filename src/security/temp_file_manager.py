@@ -5,7 +5,7 @@ import hashlib
 import atexit
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, ContextManager
+from typing import Dict, List, Optional, Generator
 from contextlib import contextmanager
 import threading
 
@@ -79,7 +79,7 @@ class SecureTempFileManager:
         original_filename: str,
         file_hash: str,
         user_id: Optional[str] = None
-    ) -> ContextManager[str]:
+    ) -> Generator[str, None, None]:
         """Context manager for automatic cleanup of temp files"""
         temp_path = None
         try:

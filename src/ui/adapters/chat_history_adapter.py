@@ -4,20 +4,20 @@ from typing import List, Dict, Any, Optional
 from src.chat_history.session_manager import SessionManager, ConversationHistoryManager
 from src.chat_history.storage.postgres_storage import PostgresConversationStorage
 from src.chat_history.models import Conversation
+from src.mappers import ChatMessageMappers, ConversationMappers
 
 
 class StreamlitChatHistoryAdapter:
 
     def __init__(self):
+        self._postgres_storage = PostgresConversationStorage()
         self.session_manager = self._get_session_manager()
-        postgres_storage = PostgresConversationStorage()
-        self.history_manager = ConversationHistoryManager(storage=postgres_storage)
+        self.history_manager = ConversationHistoryManager(storage=self._postgres_storage)
         self._sync_with_streamlit_state()
 
     def _get_session_manager(self) -> SessionManager:
         if 'chat_session_manager' not in st.session_state:
-            postgres_storage = PostgresConversationStorage()
-            st.session_state.chat_session_manager = SessionManager(storage=postgres_storage)
+            st.session_state.chat_session_manager = SessionManager(storage=self._postgres_storage)
             st.session_state.chat_session_manager.set_session_change_callback(
                 self._on_session_change
             )
@@ -26,22 +26,12 @@ class StreamlitChatHistoryAdapter:
     def _sync_with_streamlit_state(self) -> None:
         if 'messages' not in st.session_state:
             st.session_state.messages = []
-
         current_session = self.session_manager.get_current_session()
         if current_session:
-            st.session_state.messages = [
-                {"role": msg.role, "content": msg.content, **msg.metadata}
-                for msg in current_session.messages
-            ]
+            st.session_state.messages = ChatMessageMappers.to_streamlit_format(current_session.messages)
 
     def _on_session_change(self, conversation: Optional[Conversation]) -> None:
-        if conversation:
-            st.session_state.messages = [
-                {"role": msg.role, "content": msg.content, **msg.metadata}
-                for msg in conversation.messages
-            ]
-        else:
-            st.session_state.messages = []
+        st.session_state.messages = ChatMessageMappers.to_streamlit_format(conversation.messages) if conversation else []
 
     def add_message(self, role: str, content: str, **metadata) -> None:
         self.session_manager.add_message(role, content, metadata)
@@ -61,10 +51,7 @@ class StreamlitChatHistoryAdapter:
     def load_conversation(self, session_id: str) -> bool:
         conversation = self.session_manager.load_session(session_id)
         if conversation:
-            st.session_state.messages = [
-                {"role": msg.role, "content": msg.content, **msg.metadata}
-                for msg in conversation.messages
-            ]
+            st.session_state.messages = ChatMessageMappers.to_streamlit_format(conversation.messages)
             return True
         return False
 
@@ -83,17 +70,7 @@ class StreamlitChatHistoryAdapter:
 
     def get_current_conversation_info(self) -> Optional[Dict[str, Any]]:
         current_session = self.session_manager.get_current_session()
-        if current_session:
-            return {
-                "session_id": current_session.session_id,
-                "title": current_session.title,
-                "message_count": current_session.message_count,
-                "document_name": current_session.metadata.document_name,
-                "agent_type": current_session.metadata.agent_type,
-                "created_at": current_session.created_at,
-                "last_activity": current_session.last_activity
-            }
-        return None
+        return ConversationMappers.to_info_dict(current_session) if current_session else None
 
     def list_recent_conversations(self, limit: int = 10) -> List[Dict[str, Any]]:
         return self.history_manager.list_recent_conversations(limit)

@@ -20,7 +20,7 @@ class Conversation(SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
-    user_id: str = Field(foreign_key="users.id", index=True)
+    user_id: Optional[str] = Field(default=None, foreign_key="users.id", index=True)
     title: Optional[str] = None
     messages: List[Dict[str, Any]] = Field(default=[], sa_column=Column(JSONB))
     extra_data: Dict[str, Any] = Field(default={}, sa_column=Column(JSONB))

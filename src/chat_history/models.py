@@ -117,6 +117,7 @@ class Conversation:
             "is_active": self.is_active
         }
 
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Conversation':
         return cls(
@@ -151,6 +152,9 @@ class ConversationSummary:
     document_name: Optional[str]
     agent_type: Optional[str]
     tags: List[str]
+    created_at: Optional[datetime] = None
+    is_active: bool = True
+
 
     @classmethod
     def from_conversation(cls, conversation: Conversation) -> 'ConversationSummary':

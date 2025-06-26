@@ -11,6 +11,7 @@ from .custom_qdrant_client import CustomQdrantClient
 from .qdrant_retriever import QdrantRetriever
 from .qdrant_collection_manager import QdrantCollectionManager
 from .collection_name_manager import CollectionNameManager
+from .batch_processor import BatchProcessor, VectorStoreErrorHandler
 
 """Force IPv4 for Qdrant connection"""
 old_getaddrinfo = socket.getaddrinfo
@@ -47,6 +48,7 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
         # Initialize collection manager
         self.collection_manager = QdrantCollectionManager(self.client)
         self.name_manager = CollectionNameManager()
+        self.batch_processor = BatchProcessor(batch_size=100)
 
         self.vector_store = self._load_existing_vector_store()
 
@@ -143,21 +145,15 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
 
         print(f"📤 Adding {len(chunks)} chunks to collection: {collection_name}")
 
-        batch_size = 100
-        total_batches = (len(chunks) + batch_size - 1) // batch_size
-
-        for i in range(0, len(chunks), batch_size):
-            batch = chunks[i:i + batch_size]
-            batch_num = (i // batch_size) + 1
-            print(f"📦 Processing batch {batch_num}/{total_batches}")
-
+        def process_batch(batch: List[Document], batch_num: int, total_batches: int) -> None:
             try:
+                base_index = (batch_num - 1) * self.batch_processor.batch_size
                 embeddings = self._process_embeddings_batch([doc.page_content for doc in batch])
 
                 points = []
                 for j, (doc, embedding) in enumerate(zip(batch, embeddings)):
                     point = PointStruct(
-                        id=i + j,
+                        id=base_index + j,
                         vector=embedding,
                         payload={
                             "page_content": doc.page_content,
@@ -167,17 +163,13 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
                     points.append(point)
 
                 self.client.upsert(collection_name, points)
-
-                if progress_callback:
-                    progress = 0.9 + (batch_num / total_batches) * 0.1
-                    progress_callback(progress, f"Batch {batch_num}/{total_batches}")
-
                 time.sleep(0.1)
 
             except Exception as e:
                 print(f"❌ Error in batch {batch_num}: {str(e)}")
                 raise
 
+        self.batch_processor.process_batches(chunks, process_batch, progress_callback)
         print(f"✅ Qdrant vector store created with {len(chunks)} chunks in collection: {collection_name}")
 
     def _process_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
@@ -251,10 +243,11 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             return success
 
         except Exception as e:
-            print(f"❌ Error deleting document {document_filename}: {str(e)}")
             import traceback
             traceback.print_exc()
-            return False
+            return VectorStoreErrorHandler.handle_document_operation_error(
+                "deleting", document_filename, e, False
+            )
 
     def get_document_chunk_count(self, document_filename: str) -> int:
         """Get number of chunks for a specific document"""
@@ -268,8 +261,9 @@ class QdrantVectorStoreManager(BaseVectorStoreManager):
             return stats.get('points_count', 0)
 
         except Exception as e:
-            print(f"⚠️ Error counting chunks for {document_filename}: {str(e)}")
-            return 0
+            return VectorStoreErrorHandler.handle_document_operation_error(
+                "counting chunks for", document_filename, e, 0
+            )
 
     def get_connection_info(self) -> dict:
         try:

@@ -10,8 +10,8 @@ A modern RAG (Retrieval-Augmented Generation) system using OpenAI for embeddings
 - **Dual Vector Stores**: Qdrant (cloud or self-hosted) or ChromaDB (local) with per-document collections
 - **AI Agents**: 6 specialized agent types configurable per document with custom instructions
 - **Chapter-Aware Search**: Automatic detection and filtering of chapter-specific queries
-- **Authentication**: Optional user management with session persistence
-- **Chat History**: Persistent conversations with UUID-based session management
+- **Authentication**: User management with bcrypt hashing and PostgreSQL persistence
+- **PostgreSQL Chat History**: Full database persistence with JSONB for conversations and metadata
 - **Source Citations**: Detailed passage tracking with chapter and metadata references
 - **REST API**: Complete FastAPI service with Swagger documentation for external integration
 
@@ -76,8 +76,9 @@ python3 cli.py path/to/your/document.pdf
 - **LangChain**: RAG framework with experimental semantic chunking
 - **OpenAI**: Latest embeddings (text-embedding-3-large) + Chat (gpt-4.1-2025-04-14)
 - **Vector Stores**: Qdrant (cloud) or ChromaDB (local) with factory pattern
-- **Database**: PostgreSQL with SQLModel for user management and chat history
+- **Database**: PostgreSQL with SQLModel ORM and JSONB for flexible schema
 - **Authentication**: bcrypt-based user management with database persistence
+- **Chat Storage**: Full PostgreSQL persistence replacing JSON files
 - **Streamlit**: Web interface with modular components
 - **Docker**: Containerized deployment with PostgreSQL integration
 - **Custom Qdrant Client**: Direct HTTP client for better reliability

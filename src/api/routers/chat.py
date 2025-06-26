@@ -15,8 +15,8 @@ from src.api.models.chat_models import (
 )
 from src.api.dependencies.rag_system import get_user_rag_system
 from src.api.dependencies.authentication import get_optional_current_user
-from src.api.middleware import get_quota_manager
 from src.api.models.auth_models import UserInfo
+from src.api.middleware import get_quota_manager
 from src.rag_system import RAGOrchestrator
 from src.chat_history.session_manager import SessionManager, ConversationHistoryManager
 from src.chat_history.storage.postgres_storage import PostgresConversationStorage
@@ -87,6 +87,7 @@ async def ask_question(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing question: {str(e)}"
         )
+
 
 
 @router.get("/conversations", response_model=List[ConversationSummaryResponse])

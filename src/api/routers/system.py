@@ -8,6 +8,7 @@ from src.api.dependencies.authentication import get_optional_current_user
 from src.api.models.auth_models import UserInfo
 from src.rag_system import RAGOrchestrator
 from src.chat_history.session_manager import ConversationHistoryManager
+from src.chat_history.storage.postgres_storage import PostgresConversationStorage
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
@@ -86,7 +87,8 @@ async def get_system_statistics(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        history_manager = ConversationHistoryManager()
+        postgres_storage = PostgresConversationStorage()
+        history_manager = ConversationHistoryManager(storage=postgres_storage)
         conversation_stats = history_manager.get_statistics()
         kb_stats = rag_system.get_knowledge_base_stats()
 

@@ -2,13 +2,13 @@
 from typing import Optional, Dict, Any, Callable
 from .models import Conversation, ConversationMetadata
 from .storage.base_storage import BaseConversationStorage
-from .storage.json_storage import JsonConversationStorage
+from .storage.postgres_storage import PostgresConversationStorage
 
 
 class SessionManager:
 
     def __init__(self, storage: Optional[BaseConversationStorage] = None):
-        self.storage = storage or JsonConversationStorage()
+        self.storage = storage or PostgresConversationStorage()
         self.current_session: Optional[Conversation] = None
         self.auto_save = True
         self.on_session_change: Optional[Callable[[Optional[Conversation]], None]] = None
@@ -123,7 +123,7 @@ class SessionManager:
 class ConversationHistoryManager:
 
     def __init__(self, storage: Optional[BaseConversationStorage] = None):
-        self.storage = storage or JsonConversationStorage()
+        self.storage = storage or PostgresConversationStorage()
 
     def list_recent_conversations(self, limit: int = 20) -> list:
         summaries = self.storage.list_conversations(limit=limit)

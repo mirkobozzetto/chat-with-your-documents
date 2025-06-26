@@ -19,6 +19,7 @@ from src.api.middleware import get_quota_manager
 from src.api.models.auth_models import UserInfo
 from src.rag_system import RAGOrchestrator
 from src.chat_history.session_manager import SessionManager, ConversationHistoryManager
+from src.chat_history.storage.postgres_storage import PostgresConversationStorage
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -88,7 +89,8 @@ async def get_conversations(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        history_manager = ConversationHistoryManager()
+        postgres_storage = PostgresConversationStorage()
+        history_manager = ConversationHistoryManager(storage=postgres_storage)
         conversations = history_manager.list_recent_conversations()
 
         summaries = []

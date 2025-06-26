@@ -2,6 +2,7 @@
 import streamlit as st
 from typing import List, Dict, Any, Optional
 from src.chat_history.session_manager import SessionManager, ConversationHistoryManager
+from src.chat_history.storage.postgres_storage import PostgresConversationStorage
 from src.chat_history.models import Conversation
 
 
@@ -9,12 +10,14 @@ class StreamlitChatHistoryAdapter:
 
     def __init__(self):
         self.session_manager = self._get_session_manager()
-        self.history_manager = ConversationHistoryManager()
+        postgres_storage = PostgresConversationStorage()
+        self.history_manager = ConversationHistoryManager(storage=postgres_storage)
         self._sync_with_streamlit_state()
 
     def _get_session_manager(self) -> SessionManager:
         if 'chat_session_manager' not in st.session_state:
-            st.session_state.chat_session_manager = SessionManager()
+            postgres_storage = PostgresConversationStorage()
+            st.session_state.chat_session_manager = SessionManager(storage=postgres_storage)
             st.session_state.chat_session_manager.set_session_change_callback(
                 self._on_session_change
             )

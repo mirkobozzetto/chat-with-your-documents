@@ -2,14 +2,14 @@
 import streamlit as st
 import os
 from src.rag_system.rag_orchestrator import RAGOrchestrator as RAGSystem
-from src.auth import DBAuthManager
+from src.auth import AuthManager
 
 
 class SessionManager:
     """Manages Streamlit session state, authentication and RAG system initialization"""
 
     def __init__(self):
-        self.auth_manager = DBAuthManager()
+        self.auth_manager = AuthManager()
 
     def check_authentication(self) -> bool:
         """Check authentication status and redirect if needed"""

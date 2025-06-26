@@ -131,6 +131,7 @@ auth_users.json
 auth_sessions.json
 auth_sessions.json
 
+docs/
 SUMMARY.md
 CLAUDE.md
 .cursor/

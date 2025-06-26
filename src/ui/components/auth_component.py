@@ -1,12 +1,12 @@
 # src/ui/components/auth_component.py
 import streamlit as st
-from src.auth.db_auth_manager import DBAuthManager
+from src.auth import AuthManager
 
 
 class AuthComponent:
 
     def __init__(self):
-        self.auth_manager = DBAuthManager()
+        self.auth_manager = AuthManager()
 
     def render_login_form(self) -> bool:
         st.title("🔐 AI Assistant - Login")
@@ -35,8 +35,7 @@ class AuthComponent:
             st.error("Please enter both username and password")
             return False
 
-        if self.auth_manager.authenticate_user(username, password):
-            self.auth_manager.login_user(username)
+        if self.auth_manager.login_user(username, password):
             st.success(f"Welcome {username}!")
             st.rerun()
         else:

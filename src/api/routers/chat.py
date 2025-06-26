@@ -15,12 +15,18 @@ from src.api.models.chat_models import (
 )
 from src.api.dependencies.rag_system import get_user_rag_system
 from src.api.dependencies.authentication import get_optional_current_user
-from src.api.middleware import get_quota_manager
 from src.api.models.auth_models import UserInfo
+from src.api.middleware import get_quota_manager
 from src.rag_system import RAGOrchestrator
 from src.chat_history.session_manager import SessionManager, ConversationHistoryManager
+from src.chat_history.storage.postgres_storage import PostgresConversationStorage
+from src.mappers import APIResponseMappers
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+_storage = PostgresConversationStorage()
+_history_manager = ConversationHistoryManager(storage=_storage)
+_session_manager = SessionManager(storage=_storage)
 
 
 @router.post("/ask", response_model=QuestionResponse)
@@ -83,28 +89,15 @@ async def ask_question(
         )
 
 
+
 @router.get("/conversations", response_model=List[ConversationSummaryResponse])
 async def get_conversations(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        history_manager = ConversationHistoryManager()
-        conversations = history_manager.list_recent_conversations()
+        conversations = _history_manager.list_recent_conversations()
 
-        summaries = []
-        for conv in conversations:
-            summary = ConversationSummaryResponse(
-                session_id=conv["session_id"],
-                title=conv["title"],
-                message_count=conv["message_count"],
-                last_activity=conv["last_activity"],
-                document_name=conv.get("document_name"),
-                agent_type=conv.get("agent_type"),
-                tags=[]
-            )
-            summaries.append(summary)
-
-        return summaries
+        return [ConversationSummaryResponse(**APIResponseMappers.summary_to_api_response(s)) for s in _history_manager.storage.list_conversations()]
 
     except Exception as e:
         raise HTTPException(
@@ -119,8 +112,7 @@ async def get_conversation(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        session_manager = SessionManager()
-        conversation = session_manager.load_session(session_id)
+        conversation = _session_manager.load_session(session_id)
 
         if not conversation:
             raise HTTPException(
@@ -139,16 +131,7 @@ async def get_conversation(
             for msg in conversation.messages
         ]
 
-        return ConversationResponse(
-            session_id=conversation.session_id,
-            title=conversation.title,
-            messages=messages,
-            created_at=conversation.created_at,
-            updated_at=conversation.updated_at,
-            is_active=conversation.is_active,
-            document_name=conversation.metadata.document_name,
-            agent_type=conversation.metadata.agent_type
-        )
+        return ConversationResponse(**APIResponseMappers.conversation_to_response(conversation, messages))
 
     except HTTPException:
         raise
@@ -165,23 +148,13 @@ async def create_conversation(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        session_manager = SessionManager()
-        conversation = session_manager.create_new_session(
+        conversation = _session_manager.create_new_session(
             title=request.title,
             document_name=request.document_name,
             agent_type=request.agent_type
         )
 
-        return ConversationResponse(
-            session_id=conversation.session_id,
-            title=conversation.title,
-            messages=[],
-            created_at=conversation.created_at,
-            updated_at=conversation.updated_at,
-            is_active=conversation.is_active,
-            document_name=conversation.metadata.document_name,
-            agent_type=conversation.metadata.agent_type
-        )
+        return ConversationResponse(**APIResponseMappers.conversation_to_response(conversation, []))
 
     except Exception as e:
         raise HTTPException(
@@ -196,8 +169,7 @@ async def delete_conversation(
     current_user: Optional[UserInfo] = Depends(get_optional_current_user)
 ):
     try:
-        session_manager = SessionManager()
-        success = session_manager.delete_session(session_id)
+        success = _session_manager.delete_session(session_id)
 
         if not success:
             raise HTTPException(

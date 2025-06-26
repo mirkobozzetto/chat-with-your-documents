@@ -3,15 +3,13 @@ import os
 from sqlmodel import SQLModel, create_engine, Session
 from typing import Generator
 
+def get_database_url() -> str:
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise ValueError("DATABASE_URL environment variable is required")
+    return url
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    f"postgresql://{os.getenv('POSTGRES_USER', 'rag_user')}:"
-    f"{os.getenv('POSTGRES_PASSWORD', 'rag_password')}@"
-    f"localhost:5432/{os.getenv('POSTGRES_DB', 'rag_db')}"
-)
-
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(get_database_url(), echo=False)
 
 
 def create_tables():

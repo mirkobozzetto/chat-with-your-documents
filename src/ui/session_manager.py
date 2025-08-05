@@ -54,7 +54,11 @@ class SessionManager:
                     "RELEVANCE_WEIGHT": config.RELEVANCE_WEIGHT,
                     "ORIGINAL_WEIGHT": config.ORIGINAL_WEIGHT,
                     "CONTEXTUAL_RETRIEVAL_K": config.CONTEXTUAL_RETRIEVAL_K,
-                    "FINAL_RETRIEVAL_K": config.FINAL_RETRIEVAL_K
+                    "FINAL_RETRIEVAL_K": config.FINAL_RETRIEVAL_K,
+                    # Quality gate configuration
+                    "ENABLE_QUALITY_GATE": config.ENABLE_QUALITY_GATE,
+                    "ENABLE_EMPIRICAL_VALIDATION": config.ENABLE_EMPIRICAL_VALIDATION,
+                    "QUALITY_SCORE_THRESHOLD": config.QUALITY_SCORE_THRESHOLD
                 }
                 st.session_state.rag_system = RAGSystem(rag_config)
         return st.session_state.rag_system

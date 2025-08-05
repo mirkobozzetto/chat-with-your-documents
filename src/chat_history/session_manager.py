@@ -16,6 +16,12 @@ class SessionManager:
 
     def create_new_session(self, title: str = "New Conversation",
                           **metadata_kwargs) -> Conversation:
+        import streamlit as st
+        user_id = st.session_state.get('auth_user_id', None)
+
+        if user_id and 'user_info' not in metadata_kwargs:
+            metadata_kwargs['user_info'] = {'user_id': user_id}
+
         self.current_session = Conversation.create_new(title=title, **metadata_kwargs)
 
         self._auto_save()
@@ -39,7 +45,7 @@ class SessionManager:
     def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None) -> None:
         if not self.current_session:
             import streamlit as st
-            user_id = getattr(st.session_state, 'current_user', {}).get('username', None)
+            user_id = st.session_state.get('auth_user_id', None)
             self.create_new_session()
             if user_id:
                 self.current_session.metadata.user_info = {'user_id': user_id}

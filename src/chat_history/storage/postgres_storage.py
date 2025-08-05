@@ -66,9 +66,18 @@ class PostgresConversationStorage(BaseConversationStorage):
             if existing:
                 self._update_db_conversation_fields(existing, conversation, metadata_dict)
             else:
+                user_id = None
+                if 'user_info' in metadata_dict and isinstance(metadata_dict['user_info'], dict):
+                    user_id = metadata_dict['user_info'].get('user_id')
+                if not user_id:
+                    user_id = metadata_dict.get('user_id')
+
+                if not user_id:
+                    raise ValueError("No user_id found in conversation metadata")
+
                 db_conversation = DbConversation(
                     id=conversation.session_id,
-                    user_id=metadata_dict.get('user_id', 'anonymous'),
+                    user_id=user_id,
                     title=conversation.title,
                     messages=self._serialize_messages(conversation.messages),
                     extra_data=metadata_dict,

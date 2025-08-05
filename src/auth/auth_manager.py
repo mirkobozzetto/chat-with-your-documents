@@ -18,10 +18,16 @@ class AuthManager:
         if self.persistence.is_session_valid():
             session_data = self.persistence.get_current_session()
             if session_data:
-                st.session_state.authenticated = True
-                st.session_state.auth_username = session_data['username']
-                st.session_state.auth_timestamp = datetime.fromisoformat(session_data['login_time'])
-                print(f"🔐 Restored auth session for: {session_data['username']}")
+                username = session_data['username']
+                with next(get_db_session()) as session:
+                    user = session.exec(select(User).where(User.username == username)).first()
+                    if user:
+                        st.session_state.authenticated = True
+                        st.session_state.auth_username = username
+                        st.session_state.auth_user_id = user.id
+                        st.session_state.auth_timestamp = datetime.fromisoformat(session_data['login_time'])
+                        st.session_state.current_user = {'username': username, 'user_id': user.id}
+                        print(f"🔐 Restored auth session for: {username} (ID: {user.id})")
 
     def authenticate_user(self, username: str, password: str) -> bool:
         try:
@@ -43,19 +49,25 @@ class AuthManager:
             del st.session_state.authenticated
             if 'auth_username' in st.session_state:
                 del st.session_state.auth_username
+            if 'auth_user_id' in st.session_state:
+                del st.session_state.auth_user_id
             if 'auth_timestamp' in st.session_state:
                 del st.session_state.auth_timestamp
         return False
 
     def login_user(self, username: str, password: str) -> bool:
         if self.authenticate_user(username, password):
-            st.session_state.authenticated = True
-            st.session_state.auth_username = username
-            st.session_state.auth_timestamp = datetime.now()
-            st.session_state.current_user = {'username': username}
-            self.persistence.save_auth_session(username)
-            print(f"✅ User logged in: {username}")
-            return True
+            with next(get_db_session()) as session:
+                user = session.exec(select(User).where(User.username == username)).first()
+                if user:
+                    st.session_state.authenticated = True
+                    st.session_state.auth_username = username
+                    st.session_state.auth_user_id = user.id
+                    st.session_state.auth_timestamp = datetime.now()
+                    st.session_state.current_user = {'username': username, 'user_id': user.id}
+                    self.persistence.save_auth_session(username)
+                    print(f"✅ User logged in: {username} (ID: {user.id})")
+                    return True
         return False
 
     def logout_user(self) -> None:
@@ -64,6 +76,8 @@ class AuthManager:
             del st.session_state.authenticated
         if 'auth_username' in st.session_state:
             del st.session_state.auth_username
+        if 'auth_user_id' in st.session_state:
+            del st.session_state.auth_user_id
         if 'auth_timestamp' in st.session_state:
             del st.session_state.auth_timestamp
         if 'current_user' in st.session_state:

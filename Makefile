@@ -38,7 +38,7 @@ dev:
 	@echo "🚀 Dev mode: Postgres + local Streamlit"
 	docker-compose up -d postgres
 	@echo "✅ Postgres ready on :5433"
-	streamlit run app.py
+	uv run streamlit run app.py
 
 rebuild:
 	@echo "🔄 Force rebuild for code changes..."
@@ -49,3 +49,4 @@ rebuild:
 clean:
 	docker-compose down -v
 	docker system prune -f
+

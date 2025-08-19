@@ -42,33 +42,25 @@ Access: `http://localhost:8501`
 **Install dependencies:**
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 ## Streamlit App
 
 ```bash
-streamlit run app.py
+uv run streamlit run app.py
 ```
 
 ### API Server
 
 ```bash
-# Linux/macOS
-python3 api_server.py
-
-# Windows
-python api_server.py
+uv run api_server.py
 ```
 
 ### Command Line
 
 ```bash
-# Windows
-python cli.py path/to/your/document.pdf
-
-# Linux or macOS
-python3 cli.py path/to/your/document.pdf
+uv run cli.py path/to/your/document.pdf
 ```
 
 ## Technical Stack
@@ -127,7 +119,7 @@ All settings are configurable via environment variables in your `.env` file:
 
 1. Copy `.env.example` to `.env` and configure your API keys
 2. Choose vector store: Qdrant (production) or ChromaDB (local)
-3. Launch: `streamlit run app.py`
+3. Launch: `uv run streamlit run app.py`
 4. Upload documents and start chatting
 
 ## Key Dependencies

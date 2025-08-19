@@ -1,0 +1,21 @@
+# Minimal requirements for Vercel serverless deployment
+# Client autonomous version
+
+# Core dependencies
+fastapi==0.109.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# LangChain essentials
+langchain==0.1.0
+langchain-openai==0.1.0
+langchain-qdrant==0.1.0
+
+# Vector store
+qdrant-client==1.7.0
+
+# OpenAI
+openai==1.12.0
+
+# HTTP client
+httpx==0.24.0
